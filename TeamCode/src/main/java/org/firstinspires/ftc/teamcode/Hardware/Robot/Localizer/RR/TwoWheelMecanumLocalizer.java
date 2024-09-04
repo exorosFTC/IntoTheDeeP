@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR;
 
 import static org.firstinspires.ftc.teamcode.hardware.Generals.HardwareNames.BL_motor;
 import static org.firstinspires.ftc.teamcode.hardware.Generals.HardwareNames.FR_motor;
-import static org.firstinspires.ftc.teamcode.Motion.WayFinder.Math.Transformations.Pose2d_2_Pose;
-import static org.firstinspires.ftc.teamcode.Motion.WayFinder.Math.Transformations.Pose_2_Pose2d;
+import static org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Transformations.Pose2d_2_Pose;
+import static org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Transformations.Pose_2_Pose2d;
 
 import androidx.annotation.NonNull;
 
@@ -15,11 +15,14 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.hardware.Generals.Localizer;
 import org.firstinspires.ftc.teamcode.hardware.Robot.Swerve.Localizer.IMU.Threaded_IMU;
-import org.firstinspires.ftc.teamcode.Motion.RR.util.Encoder;
-import org.firstinspires.ftc.teamcode.Motion.WayFinder.Localization.Pose;
+import org.firstinspires.ftc.teamcode.Pathing.RR.util.Encoder;
+import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Pose;
 
 import java.util.Arrays;
 import java.util.List;
+
+import kotlin.Suppress;
+
 
 public class TwoWheelMecanumLocalizer extends TwoTrackingWheelLocalizer implements Localizer {
     private static double TICKS_PER_REV = 8192;

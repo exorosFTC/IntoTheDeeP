@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.Custom;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.Motion.WayFinder.Localization.Point;
-import org.firstinspires.ftc.teamcode.Motion.WayFinder.Localization.Pose;
+import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Point;
+import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Pose;
 
 /**Standard odometry class for 3 wheel localization
  * Uses an arc-based approximation of change in position

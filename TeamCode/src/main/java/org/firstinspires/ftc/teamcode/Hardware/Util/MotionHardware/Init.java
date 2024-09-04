@@ -9,17 +9,19 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 public interface Init {
 
-    static void initializeMotor(DcMotorEx motor) {
+    static DcMotorEx initializeMotor(DcMotorEx motor) {
         MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
         motorConfigurationType.setAchieveableMaxRPMFraction(1);
         motor.setMotorType(motorConfigurationType);
 
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        return motor;
     }
 
 
 
-    static void initializeMotor(DcMotorEx motor, DcMotor.RunMode runMode) {
+    static DcMotorEx initializeMotor(DcMotorEx motor, DcMotor.RunMode runMode) {
         MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
         motorConfigurationType.setAchieveableMaxRPMFraction(1);
         motor.setMotorType(motorConfigurationType);
@@ -28,9 +30,11 @@ public interface Init {
         motor.setMode(runMode);
 
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        return motor;
     }
 
-    static void initializeMotor(DcMotorEx motor, DcMotorSimple.Direction direction) {
+    static DcMotorEx initializeMotor(DcMotorEx motor, DcMotorSimple.Direction direction) {
         MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
         motorConfigurationType.setAchieveableMaxRPMFraction(1);
         motor.setMotorType(motorConfigurationType);
@@ -38,12 +42,14 @@ public interface Init {
         motor.setDirection(direction);
 
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        return motor;
     }
 
 
 
 
-    static void initializeMotor(DcMotorEx motor, DcMotor.RunMode runMode, DcMotorSimple.Direction direction) {
+    static DcMotorEx initializeMotor(DcMotorEx motor, DcMotor.RunMode runMode, DcMotorSimple.Direction direction) {
         MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
         motorConfigurationType.setAchieveableMaxRPMFraction(1);
         motor.setMotorType(motorConfigurationType);
@@ -54,6 +60,8 @@ public interface Init {
         motor.setDirection(direction);
 
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        return motor;
     }
 
 

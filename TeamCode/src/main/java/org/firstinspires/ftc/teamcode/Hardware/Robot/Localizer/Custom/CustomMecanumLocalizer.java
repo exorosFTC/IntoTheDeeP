@@ -1,19 +1,24 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.Custom;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_GEAR_RATIO;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_TICKS_PER_REVOLUTION;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_WHEEL_RADIUS_CM;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOdometry;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.PerpendicularOdometry;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightBack;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightOdometry;
+
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.hardware.Generals.Localizer;
-import org.firstinspires.ftc.teamcode.Motion.RR.util.Encoder;
-import org.firstinspires.ftc.teamcode.Motion.WayFinder.Localization.Pose;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
+import org.firstinspires.ftc.teamcode.Pathing.RR.util.Encoder;
+import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Pose;
 
 public class CustomMecanumLocalizer implements Localizer {
-    public static double TICKS_PER_REV = 8192;
-    public static double WHEEL_RADIUS = 4; //cm
-    public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
-
     public double l = -14.25; //also cm
     public double r = 7.25;
     public double b = -24;
@@ -24,13 +29,13 @@ public class CustomMecanumLocalizer implements Localizer {
     private double currentL, currentR, currentB;
     private double delta_L, delta_R, delta_B;
 
-    private ElapsedTime loopTime;
+    private final ElapsedTime loopTime;
 
-    private Encoder leftEncoder, rightEncoder, backEncoder;
-    private Dead3WheelLocalizer localizer;
+    private final Encoder leftEncoder, rightEncoder, backEncoder;
+    private final Dead3WheelLocalizer localizer;
 
     public static double encoderTicksToCM(double ticks) {
-        return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / TICKS_PER_REV;
+        return ODOMETRY_WHEEL_RADIUS_CM * 2 * Math.PI * ODOMETRY_GEAR_RATIO * ticks / ODOMETRY_TICKS_PER_REVOLUTION;
     }
 
     public CustomMecanumLocalizer(HardwareMap hardwareMap) {
@@ -43,12 +48,11 @@ public class CustomMecanumLocalizer implements Localizer {
 
         localizer = new Dead3WheelLocalizer(l, r, b);
 
-        leftEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "FR"));
-        rightEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "FL"));
-        backEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, "BL"));
+        leftEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, LeftOdometry));
+        rightEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, RightOdometry));
+        backEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, PerpendicularOdometry));
 
         //TODO: reverse any encoders using Encoder.setDirection(Encoder.Direction.REVERSE)
-        //TODO: select the right swerve modules for this
     }
 
     @Override

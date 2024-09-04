@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Motion.RR.util.Encoder;
+import org.firstinspires.ftc.teamcode.Pathing.RR.util.Encoder;
 
 import java.util.Arrays;
 import java.util.List;

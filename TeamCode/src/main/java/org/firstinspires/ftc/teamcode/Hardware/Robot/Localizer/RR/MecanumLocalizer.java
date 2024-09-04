@@ -7,8 +7,8 @@ import static org.firstinspires.ftc.teamcode.hardware.Generals.HardwareNames.FR_
 import static org.firstinspires.ftc.teamcode.hardware.Generals.HardwareNames.left_pod;
 import static org.firstinspires.ftc.teamcode.hardware.Generals.HardwareNames.perpendicular_pod;
 import static org.firstinspires.ftc.teamcode.hardware.Generals.HardwareNames.right_pod;
-import static org.firstinspires.ftc.teamcode.Motion.WayFinder.Math.Transformations.Pose2d_2_Pose;
-import static org.firstinspires.ftc.teamcode.Motion.WayFinder.Math.Transformations.Pose_2_Pose2d;
+import static org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Transformations.Pose2d_2_Pose;
+import static org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Transformations.Pose_2_Pose2d;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,8 +20,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.hardware.Generals.Localizer;
-import org.firstinspires.ftc.teamcode.Motion.WayFinder.Localization.Pose;
-import org.firstinspires.ftc.teamcode.Motion.RR.util.Encoder;
+import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Pose;
+import org.firstinspires.ftc.teamcode.Pathing.RR.util.Encoder;
 
 import java.util.Arrays;
 import java.util.List;
