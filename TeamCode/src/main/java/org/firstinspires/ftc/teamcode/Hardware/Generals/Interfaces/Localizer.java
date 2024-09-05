@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Pose;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 /**Localizer interface for smoother code*/
 public interface Localizer {

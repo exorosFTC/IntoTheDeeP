@@ -5,20 +5,20 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_WHEEL_RADIUS_CM;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOdometry;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.PerpendicularOdometry;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightBack;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightOdometry;
 
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
-import org.firstinspires.ftc.teamcode.Pathing.RR.util.Encoder;
-import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Pose;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
+/** @noinspection ALL*/
 public class CustomMecanumLocalizer implements Localizer {
+    private Hardware hardware;
+
     public double l = -14.25; //also cm
     public double r = 7.25;
     public double b = -24;
@@ -30,15 +30,15 @@ public class CustomMecanumLocalizer implements Localizer {
     private double delta_L, delta_R, delta_B;
 
     private final ElapsedTime loopTime;
-
-    private final Encoder leftEncoder, rightEncoder, backEncoder;
     private final Dead3WheelLocalizer localizer;
 
     public static double encoderTicksToCM(double ticks) {
         return ODOMETRY_WHEEL_RADIUS_CM * 2 * Math.PI * ODOMETRY_GEAR_RATIO * ticks / ODOMETRY_TICKS_PER_REVOLUTION;
     }
 
-    public CustomMecanumLocalizer(HardwareMap hardwareMap) {
+    public CustomMecanumLocalizer(LinearOpMode opMode) {
+        this.hardware = Hardware.getInstance(opMode.hardwareMap);
+
         currentPose = new Pose();
         previousPose = new Pose();
         velocityPose = new Pose();
@@ -48,10 +48,6 @@ public class CustomMecanumLocalizer implements Localizer {
 
         localizer = new Dead3WheelLocalizer(l, r, b);
 
-        leftEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, LeftOdometry));
-        rightEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, RightOdometry));
-        backEncoder = new Encoder(hardwareMap.get(DcMotorEx.class, PerpendicularOdometry));
-
         //TODO: reverse any encoders using Encoder.setDirection(Encoder.Direction.REVERSE)
     }
 
@@ -60,7 +56,6 @@ public class CustomMecanumLocalizer implements Localizer {
 
         Pose lastPose = currentPose;
         currentPose = localizer.getDeltaPoseEstimate(delta_L, delta_R, delta_B, currentPose);
-        //currentPose = new Pose(currentPose.sum(deltaPose.getPoint()), deltaPose.heading);
 
         Pose deltaPose = currentPose.subtract(lastPose);
         velocityPose = deltaPose.divideBy(loopTime.seconds());
@@ -98,9 +93,10 @@ public class CustomMecanumLocalizer implements Localizer {
         previousR = currentR;
         previousB = currentB;
 
-        currentL = leftEncoder.getCurrentPosition();
-        currentR = rightEncoder.getCurrentPosition();
-        currentB = backEncoder.getCurrentPosition();
+        currentL = hardware.encoderReadings.get(LeftOdometry);
+        currentR = hardware.encoderReadings.get(RightOdometry);
+        currentB = hardware.encoderReadings.get(PerpendicularOdometry);
+
 
         delta_L = encoderTicksToCM(currentL - previousL);
         delta_R = encoderTicksToCM(currentR - previousR);

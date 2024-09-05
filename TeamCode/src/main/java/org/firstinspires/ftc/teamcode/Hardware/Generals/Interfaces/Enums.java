@@ -23,6 +23,11 @@ public interface Enums {
         AUTONOMUS
     }
 
+    enum Telemetry{
+        DASHBOARD,
+        REGULAR
+    }
+
     enum Gamepads{
         G1, G2,
         BOTH

@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
-import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Pose;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 /**Test class for field-centric drive before mounting odometry wheels
  * Used strictly for the HEADING value**/

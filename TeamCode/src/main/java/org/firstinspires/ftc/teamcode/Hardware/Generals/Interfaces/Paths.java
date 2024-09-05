@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces;
 
-import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Exceptions.NotAPolynomialException;
-import org.firstinspires.ftc.teamcode.Pathing.WayFinder.Math.Point;
+import org.firstinspires.ftc.teamcode.Pathing.Exceptions.NotAPolynomialException;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Point;
 
 public interface Paths {
     void update() throws NotAPolynomialException;

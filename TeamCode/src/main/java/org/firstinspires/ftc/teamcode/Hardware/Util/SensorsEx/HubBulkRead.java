@@ -4,7 +4,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Pathing.RR.util.LynxModuleUtil;
+import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.LynxModuleUtil;
 
 import java.util.List;
 

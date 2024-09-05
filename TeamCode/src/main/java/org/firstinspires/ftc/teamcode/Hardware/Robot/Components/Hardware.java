@@ -15,19 +15,17 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevTouchSensor;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.IMU.Threaded_IMU;
 import org.firstinspires.ftc.teamcode.Hardware.Util.MotionHardware.Init;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
-import org.firstinspires.ftc.teamcode.Pathing.RR.util.Encoder;
+import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.Encoder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,10 +36,8 @@ public class Hardware {
     public final HubBulkRead bulk;
 
     private VoltageSensor batteryVoltageSensor;
-    private Threaded_IMU imu;
 
     public double batteryVoltage;
-    public double imuAngleRad;
 
 
 
@@ -70,62 +66,61 @@ public class Hardware {
 
 
 
-    public static Hardware getInstance(LinearOpMode opMode) {
+    public static Hardware getInstance(HardwareMap hardwareMap) {
         if (instance == null) {
-            instance = new Hardware(opMode);
+            instance = new Hardware(hardwareMap);
         }
         return instance;
     }
 
 
 
-    public Hardware(LinearOpMode opMode) {
-        this.bulk = new HubBulkRead(opMode.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
+    public Hardware(HardwareMap hardwareMap) {
+        this.bulk = new HubBulkRead(hardwareMap, LynxModule.BulkCachingMode.MANUAL);
 
-        batteryVoltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
-        imu = new Threaded_IMU(opMode);
+        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         // add all servos into a list
         for (String servoName : ServoNamesList)
             if (!servoName.isEmpty())
-                servos.put(servoName, opMode.hardwareMap.get(ServoEx.class, servoName));
+                servos.put(servoName, hardwareMap.get(ServoEx.class, servoName));
 
         for (String CRServoName: CRServoNamesList)
             if (!CRServoName.isEmpty())
-                CRservos.put(CRServoName, opMode.hardwareMap.get(CRServo.class, CRServoName));
+                CRservos.put(CRServoName, hardwareMap.get(CRServo.class, CRServoName));
 
         // add all motors into a list
         for (String motorName : MotorNamesList)
             if (!motorName.isEmpty())
-                motors.put(motorName, Init.initializeMotor(opMode.hardwareMap.get(DcMotorEx.class, motorName)));
+                motors.put(motorName, Init.initializeMotor(hardwareMap.get(DcMotorEx.class, motorName)));
 
         // add all encoders into a list, without creating additional instances
         for (String encoderName : EncoderNamesList)
             if (!(motors.get(encoderName) == null || encoderName.isEmpty()))
-                encoders.put(encoderName, new Encoder(opMode.hardwareMap.get(DcMotorEx.class, encoderName)));
+                encoders.put(encoderName, new Encoder(hardwareMap.get(DcMotorEx.class, encoderName)));
             else if (!encoderName.isEmpty())
                 encoders.put(encoderName, new Encoder(motors.get(encoderName)));
 
 
         for (String analogName : AnalogNamesList)
             if (!analogName.isEmpty())
-                analog.put(analogName, opMode.hardwareMap.get(AnalogInput.class, analogName));
+                analog.put(analogName, hardwareMap.get(AnalogInput.class, analogName));
 
         for (String digitalName : DigitalNamesList)
             if (!digitalName.isEmpty())
-                digital.put(digitalName, opMode.hardwareMap.get(DigitalChannel.class, digitalName));
+                digital.put(digitalName, hardwareMap.get(DigitalChannel.class, digitalName));
 
         for (String distanceName : RevDistanceNameList)
             if (!distanceName.isEmpty())
-                distance.put(distanceName, opMode.hardwareMap.get(Rev2mDistanceSensor.class, distanceName));
+                distance.put(distanceName, hardwareMap.get(Rev2mDistanceSensor.class, distanceName));
 
         for (String colorName : RevColorNameList)
             if (!colorName.isEmpty())
-                color.put(colorName, opMode.hardwareMap.get(RevColorSensorV3.class, colorName));
+                color.put(colorName, hardwareMap.get(RevColorSensorV3.class, colorName));
 
         for (String touchName : RevTouchNameList)
             if (!touchName.isEmpty())
-                touch.put(touchName, opMode.hardwareMap.get(RevTouchSensor.class, touchName));
+                touch.put(touchName, hardwareMap.get(RevTouchSensor.class, touchName));
     }
 
 
@@ -138,7 +133,6 @@ public class Hardware {
         bulk.clearCache(Enums.Hubs.ALL);
 
         batteryVoltage = batteryVoltageSensor.getVoltage();
-        imuAngleRad = imu.getAngle(AngleUnit.RADIANS);
 
         // read external encoder values
         for (Map.Entry<String, Encoder> encoder : encoders.entrySet())
