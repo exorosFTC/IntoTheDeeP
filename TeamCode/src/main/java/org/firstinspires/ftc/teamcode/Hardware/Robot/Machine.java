@@ -15,8 +15,9 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
@@ -25,13 +26,19 @@ import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Camera;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Pipelines.PropDetectionPipeline;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.MecanumDrive;
+import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 import javax.annotation.Nullable;
 
 public class Machine {
     public Hardware hardware;
+    public HubBulkRead bulk;
+
+    private VoltageSensor batteryVoltageSensor;
 
     public MecanumDrive drive;
+
 
     public GamepadEx g1, g2;
     private boolean add_g1, add_g2;
@@ -87,8 +94,11 @@ public class Machine {
     }
 
     public Machine construct(LinearOpMode opMode) {
+        this.bulk = new HubBulkRead(opMode.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
         this.hardware = Hardware.getInstance(opMode.hardwareMap);
         this.opMode = opMode;
+
+        batteryVoltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
 
         drive = new MecanumDrive(opMode);
 
@@ -114,21 +124,23 @@ public class Machine {
 
 
 
-    public void read() { hardware.read(); }
 
     public void write() {
-        drive.write();
+        drive.update();
     }
 
 
 
 
     public void update() {
-        updateGamepad();
-        updateDriveSensitivity();
+        if (data.opModeType == Enums.OpMode.TELE_OP) {
+            updateGamepad();
+            updateDriveSensitivity();
+            updateDrive();
+        }
     }
 
-    public void updateDriveSensitivity() {
+    private void updateDriveSensitivity() {
         if (usingDriveSensitivity) {
             if (usingVelocityToggle) {
                 if (usingButtonSensitivity && g1.wasJustPressed(data.sensitivityButton))
@@ -154,9 +166,17 @@ public class Machine {
         }
     }
 
-    public void updateGamepad() {
+    private void updateGamepad() {
         if (g1 != null) g1.readButtons();
         if (g2 != null) g2.readButtons();
+    }
+
+    private void updateDrive() {
+        drive.update(new Pose(
+                -g1.getLeftY(),     // forwards
+                g1.getLeftX(),      // sideways
+                g1.getRightX()      // turning
+        ));
     }
 
 

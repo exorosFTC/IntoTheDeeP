@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 public class MecanumDrive {
     private static Hardware hardware;
+    private static LinearOpMode opMode;
 
     private final double sum;
     private double LF, RF, LB, RB;
@@ -20,6 +21,7 @@ public class MecanumDrive {
     public MecanumDrive(LinearOpMode opMode) {
         hardware = Hardware.getInstance(opMode.hardwareMap);
 
+        this.opMode = opMode;
         this.sum = (TRACK_LENGTH + TRACK_WIDTH) / 2;
     }
 
@@ -33,7 +35,7 @@ public class MecanumDrive {
         RB = x - y + head * sum;
     }
 
-    public void write() {
+    public void update() {
         hardware.motors.get(LeftFront).setPower(LF);
         hardware.motors.get(LeftBack).setPower(LB);
         hardware.motors.get(RightFront).setPower(RF);

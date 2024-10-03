@@ -17,10 +17,11 @@ import javax.annotation.Nullable;
 
 public class PurePursuit implements Paths {
     private List<Point> pathPoints = new ArrayList<Point>();
+
     private Point lastFollowedPoint = new Point();
     private Point pointToFollow;
-    private double pointsLeft;
 
+    private int pointsLeft;
     private int currentLineFirstPoint = 0;
 
     private double radiusToSearch = 20; //cm
@@ -35,7 +36,7 @@ public class PurePursuit implements Paths {
 
     private Point correctionPoint;
     private double lastThreePointsDifference = 0;
-    private double correction = 100; //cm (applies to x and y)
+    private final double correction = 100; //cm (applies to x and y)
     //TODO: tune this too
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

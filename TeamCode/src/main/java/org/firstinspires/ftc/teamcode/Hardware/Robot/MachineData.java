@@ -49,6 +49,11 @@ public class MachineData implements Enums, Enums.Mecanum {
         return this;
     }
 
+    public MachineData setAutoDropdown(boolean flag) {
+        SystemConstants.autoDropdown = flag;
+        return this;
+    }
+
     public MachineData setUsingOpenCv(boolean flag) {
         SystemConstants.usingOpenCvCamera = flag;
         return this;

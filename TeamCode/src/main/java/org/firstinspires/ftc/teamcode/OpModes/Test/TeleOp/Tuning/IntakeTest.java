@@ -1,0 +1,59 @@
+package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp.Tuning;
+
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Intake;
+import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
+
+@TeleOp(name = "Intake", group = "Test")
+public class IntakeTest extends ExoMode {
+    private static Intake intake;
+    private static GamepadEx g2;
+
+    @Override
+    protected void Init() {
+        intake = new Intake(this);
+        g2 = new GamepadEx(gamepad2);
+    }
+
+    @Override
+    protected void WhenStarted() {}
+
+    @Override
+    protected void InitializeThreads() {}
+
+    @Override
+    protected void Loop() {
+        if (g2.isDown(GamepadKeys.Button.RIGHT_BUMPER)) {
+
+            if (g2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
+                intake.setAction(Enums.IntakeAction.COLLECT);
+
+            if (g2.wasJustPressed(GamepadKeys.Button.DPAD_UP))
+                intake.setAction(Enums.IntakeAction.TRANSFER);
+
+            if (g2.wasJustPressed(GamepadKeys.Button.A))
+                intake.setAction(Enums.IntakeAction.SPIT);
+
+            intake.setExtensionPower(-g2.getLeftY());
+        }
+
+        g2.readButtons();
+
+    }
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+        Init();
+
+        waitForStart();
+
+        WhenStarted();
+
+        while (opModeIsActive())
+            Loop();
+    }
+}

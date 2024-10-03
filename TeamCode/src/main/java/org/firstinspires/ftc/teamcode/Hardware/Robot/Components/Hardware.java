@@ -31,38 +31,26 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Hardware {
-
     private static Hardware instance;
-    public final HubBulkRead bulk;
-
-    private VoltageSensor batteryVoltageSensor;
-
-    public double batteryVoltage;
 
 
 
-    public final Map<String, ServoEx> servos = new HashMap<>();
-    public final Map<String , CRServo> CRservos = new HashMap<>();
+    public Map<String, ServoEx> servos = new HashMap<>();
+    public Map<String , CRServo> CRservos = new HashMap<>();
 
-    public final Map<String, AnalogInput> analog = new HashMap<>();
-    public final Map<String, DigitalChannel> digital = new HashMap<>();
-
-    public Map<String, Double> analogReadings = new HashMap<>();
-    public Map<String, Boolean> digitalReadings = new HashMap<>();
+    public Map<String, AnalogInput> analog = new HashMap<>();
+    public Map<String, DigitalChannel> digital = new HashMap<>();
 
 
 
-    public final Map<String, RevColorSensorV3> color = new HashMap<>();
-    public final Map<String, Rev2mDistanceSensor> distance = new HashMap<>();
-    public final Map<String, RevTouchSensor> touch = new HashMap<>();
+    public Map<String, RevColorSensorV3> color = new HashMap<>();
+    public Map<String, Rev2mDistanceSensor> distance = new HashMap<>();
+    public Map<String, RevTouchSensor> touch = new HashMap<>();
 
 
 
-    public final Map<String, DcMotorEx> motors = new HashMap<>();
-    private final Map<String, Encoder> encoders = new HashMap<>();
-
-    public Map<String, Integer> motorReadings = new HashMap<>();
-    public Map<String, Integer> encoderReadings = new HashMap<>();
+    public Map<String, DcMotorEx> motors = new HashMap<>();
+    private Map<String, Encoder> encoders = new HashMap<>();
 
 
 
@@ -76,10 +64,6 @@ public class Hardware {
 
 
     public Hardware(HardwareMap hardwareMap) {
-        this.bulk = new HubBulkRead(hardwareMap, LynxModule.BulkCachingMode.MANUAL);
-
-        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
-
         // add all servos into a list
         for (String servoName : ServoNamesList)
             if (!servoName.isEmpty())
@@ -121,36 +105,5 @@ public class Hardware {
         for (String touchName : RevTouchNameList)
             if (!touchName.isEmpty())
                 touch.put(touchName, hardwareMap.get(RevTouchSensor.class, touchName));
-    }
-
-
-
-    public void read() {
-        motorReadings.clear();
-        encoderReadings.clear();
-
-        // clear all cache
-        bulk.clearCache(Enums.Hubs.ALL);
-
-        batteryVoltage = batteryVoltageSensor.getVoltage();
-
-        // read external encoder values
-        for (Map.Entry<String, Encoder> encoder : encoders.entrySet())
-            encoderReadings.put(encoder.getKey(), encoder.getValue().getCurrentPosition());
-
-        // read motor encoder values
-        for (Map.Entry<String, DcMotorEx> motor : motors.entrySet())
-            motorReadings.put(
-                    motor.getKey(),
-                    encoders.get(motor.getKey()) != null ? motor.getValue().getCurrentPosition() : encoderReadings.get(motor.getKey())
-            );
-
-        // read the analog data
-        for (Map.Entry<String, AnalogInput> a : analog.entrySet())
-            analogReadings.put(a.getKey(), a.getValue().getVoltage());
-
-        // read the digital data
-        for (Map.Entry<String, DigitalChannel> d : digital.entrySet())
-            digitalReadings.put(d.getKey(), d.getValue().getState());
     }
 }
