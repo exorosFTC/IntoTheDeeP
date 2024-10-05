@@ -42,7 +42,8 @@ public interface Enums {
         SPIT,
         STOP,
         COLLECT,
-        TRANSFER
+        TRANSFER,
+        DISABLE
     }
 
     enum Color{
@@ -106,6 +107,7 @@ public interface Enums {
             HANG,
             TRANSFER,
             COLLECT,
+            DISABLE,
 
             SCORE_HIGH_BASKET,
             SCORE_LOW_BASKET,

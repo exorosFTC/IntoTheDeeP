@@ -25,7 +25,8 @@ import org.firstinspires.ftc.teamcode.Hardware.OpenCV.AprilTagCamera;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Camera;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Pipelines.PropDetectionPipeline;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.MecanumDrive;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.ScorringSystem;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
@@ -37,7 +38,8 @@ public class Machine {
 
     private VoltageSensor batteryVoltageSensor;
 
-    public MecanumDrive drive;
+    public Drivetrain drive;
+    public ScorringSystem system;
 
 
     public GamepadEx g1, g2;
@@ -100,7 +102,8 @@ public class Machine {
 
         batteryVoltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
 
-        drive = new MecanumDrive(opMode);
+        drive = new Drivetrain(opMode);
+        system = new ScorringSystem(opMode);
 
         telemetry = (data.telemetryType == Enums.Telemetry.REGULAR) ? opMode.telemetry :
                 new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -125,20 +128,6 @@ public class Machine {
 
 
 
-    public void write() {
-        drive.update();
-    }
-
-
-
-
-    public void update() {
-        if (data.opModeType == Enums.OpMode.TELE_OP) {
-            updateGamepad();
-            updateDriveSensitivity();
-            updateDrive();
-        }
-    }
 
     private void updateDriveSensitivity() {
         if (usingDriveSensitivity) {
@@ -171,12 +160,26 @@ public class Machine {
         if (g2 != null) g2.readButtons();
     }
 
-    private void updateDrive() {
+
+
+    public void updateDrive() {
         drive.update(new Pose(
                 -g1.getLeftY(),     // forwards
                 g1.getLeftX(),      // sideways
                 g1.getRightX()      // turning
         ));
+    }
+
+    public void updateDrive(double x, double y, double head) {
+        drive.update(new Pose(x, y, head));
+    }
+
+    public void updateSystem() {
+        if (data.opModeType == Enums.OpMode.TELE_OP) {
+            updateGamepad();
+            updateDriveSensitivity();
+        }
+        system.update();
     }
 
 
@@ -215,7 +218,7 @@ public class Machine {
 
     public void initComplete() {
         if (telemetry != null) {
-            telemetry.addLine("INIT COMPLETE! PRESS PLAY TO KILL EM' ALL");
+            telemetry.addLine("INIT COMPLETE! KILL EM' ALL 😈");
             telemetry.update();
         }
     }

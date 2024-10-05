@@ -1,11 +1,11 @@
-package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp.Tuning;
+package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp;
 
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Intake;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems.Intake;
 import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
 
 @TeleOp(name = "Intake", group = "Test")
@@ -38,22 +38,10 @@ public class IntakeTest extends ExoMode {
             if (g2.wasJustPressed(GamepadKeys.Button.A))
                 intake.setAction(Enums.IntakeAction.SPIT);
 
-            intake.setExtensionPower(-g2.getLeftY());
+            intake.extend(-g2.getLeftY());
         }
 
         g2.readButtons();
 
-    }
-
-    @Override
-    public void runOpMode() throws InterruptedException {
-        Init();
-
-        waitForStart();
-
-        WhenStarted();
-
-        while (opModeIsActive())
-            Loop();
     }
 }

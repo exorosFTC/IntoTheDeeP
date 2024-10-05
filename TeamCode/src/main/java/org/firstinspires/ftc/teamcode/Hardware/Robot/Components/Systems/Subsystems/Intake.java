@@ -1,5 +1,10 @@
-package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems;
+package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.blue;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.extendoMAX;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.inIntakeTreshold;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.overBarThreshold;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.red;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeColor;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeDistance;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeDropdown;
@@ -16,26 +21,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift.OneMotorLift;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.ColorEx;
 
 public class Intake implements Enums {
     private static Hardware hardware;
-
     private static LinearOpMode opMode;
 
-    private final ColorEx red = new ColorEx(255, 0, 0);
-    private final ColorEx blue = new ColorEx(0, 0, 255);
-
-    private IntakeAction lastAction = IntakeAction.INIT;
-
-    private final double inIntakeTreshold = 0;
-    private final double overBarThreshold = 0;
-    private final double encoderMaxTicks = 0;
+    private static IntakeAction lastAction = IntakeAction.INIT;
+    public final OneMotorLift extension;
 
     private boolean isIntakeAccessible = true;
     private boolean isInPit = false;
-
-    private double extensionPower = 0;
 
     private static final double
             dropdownInit = 0,
@@ -55,17 +52,29 @@ public class Intake implements Enums {
 
     public Intake(LinearOpMode opMode) {
         hardware = Hardware.getInstance(opMode.hardwareMap);
-
-        this.opMode = opMode;
         hardware.CRservos.get(IntakeRightServo).setDirection(DcMotorSimple.Direction.REVERSE);
 
-        setAction(IntakeAction.INIT);
+        this.opMode = opMode;
+        extension = new OneMotorLift(opMode, IntakeMotor);
+
+        extension.addLimit(extendoMAX)
+                .addCurrentAlert(1)
+                .reverse();
+
     }
 
 
 
     public void setAction(IntakeAction action) {
         switch (action){
+            case DISABLE: {
+                hardware.servos.get(IntakeStopper).disable();
+                hardware.servos.get(IntakeDropdown).disable();
+
+                hardware.CRservos.get(IntakeLeftServo).setPower(intakeStopPower);
+                hardware.CRservos.get(IntakeRightServo).setPower(intakeStopPower);
+            } break;
+
             case INIT: {
                 if (hardware.servos.get(IntakeStopper).getPosition() != stopperBlocked)
                     hardware.servos.get(IntakeStopper).setPosition(stopperBlocked);
@@ -83,8 +92,7 @@ public class Intake implements Enums {
 
                 if (hardware.servos.get(IntakeDropdown).getPosition() != dropdownIntake) {
                     hardware.servos.get(IntakeDropdown).setPosition(dropdownIntake);
-                    try { wait(600); }
-                    catch (InterruptedException e) {}
+                    try { wait(600); } catch (InterruptedException e) {}
                 }
 
                 hardware.CRservos.get(IntakeLeftServo).setPower(intakeSpitPower);
@@ -112,8 +120,7 @@ public class Intake implements Enums {
 
                 if (hardware.servos.get(IntakeDropdown).getPosition() != dropdownIntake) {
                     hardware.servos.get(IntakeDropdown).setPosition(dropdownIntake);
-                    try { wait(600); }
-                    catch (InterruptedException e) {}
+                    try { wait(600); } catch (InterruptedException e) {}
                 }
 
                 hardware.CRservos.get(IntakeLeftServo).setPower(intakeStartPower);
@@ -126,19 +133,16 @@ public class Intake implements Enums {
 
                 if (hardware.servos.get(IntakeDropdown).getPosition() != dropdownTransfer) {
                     hardware.servos.get(IntakeDropdown).setPosition(dropdownTransfer);
-                    try { wait(600); }
-                    catch (InterruptedException e) {}
+                    try { wait(600); } catch (InterruptedException e) {}
                 }
 
                 hardware.servos.get(IntakeStopper).setPosition(stopperThrough);
-                try { wait(600); }
-                catch (InterruptedException e) {}
+                try { wait(600); } catch (InterruptedException e) {}
 
                 hardware.CRservos.get(IntakeLeftServo).setPower(intakeStartPower);
                 hardware.CRservos.get(IntakeRightServo).setPower(intakeStartPower);
 
-                try { wait(1500); }
-                catch (InterruptedException e) {}
+                try { wait(1500); } catch (InterruptedException e) {}
 
                 hardware.CRservos.get(IntakeLeftServo).setPower(intakeStopPower);
                 hardware.CRservos.get(IntakeRightServo).setPower(intakeStopPower);
@@ -149,11 +153,13 @@ public class Intake implements Enums {
         lastAction = action;
     }
 
-    public void setExtensionPower(double power) { extensionPower = power; }
+    public void extend(double power) {
+        if (!hardware.touch.get(IntakeExtensionTouch).isPressed())
+            extension.extend(power);
+    }
 
-    private void update() {
+    public void update() {
         if (isIntakeAccessible) {
-            checkExtensionLimits();
             checkIntakeColor();
             checkAutoDropdown();
         }
@@ -171,21 +177,12 @@ public class Intake implements Enums {
                                         ||
                     checkColor() == Color.NONE) // this is yellow, I hope
             {
-                setExtensionPower(-1);
                 while (opMode.opModeIsActive() && !hardware.touch.get(IntakeExtensionTouch).isPressed())
-                    checkExtensionLimits();
+                    extend(-1);
 
                 setAction(IntakeAction.TRANSFER);
             } else setAction(IntakeAction.SPIT);
         }
-    }
-
-    private void checkExtensionLimits() {
-        if (hardware.motors.get(IntakeMotor).getCurrentPosition() > encoderMaxTicks
-                                            ||
-                    hardware.touch.get(IntakeExtensionTouch).isPressed())
-            extensionPower = 0;
-        else hardware.motors.get(IntakeMotor).setPower(extensionPower);
     }
 
     private void checkAutoDropdown() {
@@ -212,6 +209,8 @@ public class Intake implements Enums {
             return Color.RED;
         return Color.NONE;
     }
+
+    public IntakeAction getAction() { return lastAction; }
 
 
 }

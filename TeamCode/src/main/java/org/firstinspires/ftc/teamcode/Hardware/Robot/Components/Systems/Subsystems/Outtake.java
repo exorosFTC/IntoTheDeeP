@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems;
+package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeMAX;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOuttakeMotor;
@@ -11,7 +11,6 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Rig
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift.TwoMotorLift;
@@ -21,7 +20,7 @@ public class Outtake implements Enums.Outtake {
     private static LinearOpMode opMode;
 
     private static OuttakeAction lastAction;
-    private static TwoMotorLift extension;
+    public final TwoMotorLift extension;
 
     private static final double
             clawOpen = 0,
@@ -54,20 +53,27 @@ public class Outtake implements Enums.Outtake {
         hardware.servos.get(OuttakeLeftPivot).setInverted(true);
 
         this.opMode = opMode;
-        this.extension = new TwoMotorLift(hardware, LeftOuttakeMotor, RightOuttakeMotor);
-
-        setAction(OuttakeAction.INIT);
+        this.extension = new TwoMotorLift(opMode, LeftOuttakeMotor, RightOuttakeMotor);
 
         for (LiftAction action : LiftAction.values()) {
             extension.add(action.name(), action.ticks);
         }
-        extension.addLimit(outtakeMAX);
+
+        extension.addLimit(outtakeMAX)
+                .addCurrentAlert(1)
+                .reverseRight();
     }
 
 
 
     public void openClaw(boolean open) {
         hardware.servos.get(OuttakeClaw).setPosition((open) ? clawOpen : clawClosed);
+    }
+
+    public void toggleClaw() {
+        if (hardware.servos.get(OuttakeClaw).getPosition() == clawOpen)
+            openClaw(false);
+        else openClaw(true);
     }
 
     private void setArmAction(ArmAction action) {
@@ -87,8 +93,7 @@ public class Outtake implements Enums.Outtake {
 
                 hardware.servos.get(OuttakeExtension).setPosition(littleExtensionScore);
 
-                try { wait(300); }
-                catch (InterruptedException e) {}
+                try { wait(300); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeWrist).setPosition(wristScore);
 
@@ -100,8 +105,7 @@ public class Outtake implements Enums.Outtake {
                 hardware.servos.get(OuttakeWrist).setPosition(wristHang);
                 hardware.servos.get(OuttakeExtension).setPosition(littleExtensionScore); // fully retracted
 
-                try { wait(600); }
-                catch (InterruptedException e) {}
+                try { wait(600); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeLeftPivot).setPosition(armHang);
                 hardware.servos.get(OuttakeRightPivot).setPosition(armHang);
@@ -116,8 +120,7 @@ public class Outtake implements Enums.Outtake {
                 hardware.servos.get(OuttakeLeftPivot).setPosition(armCollect);
                 hardware.servos.get(OuttakeRightPivot).setPosition(armCollect);
 
-                try { wait(400); }
-                catch (InterruptedException e) {}
+                try { wait(400); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeWrist).setPosition(wristCollect);
                 hardware.servos.get(OuttakeExtension).setPosition(littleExtensionCollect);
@@ -133,8 +136,7 @@ public class Outtake implements Enums.Outtake {
 
                 hardware.servos.get(OuttakeWrist).setPosition(wristTransfer);
 
-                try { wait(300); }
-                catch (InterruptedException e) {}
+                try { wait(300); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeExtension).setPosition(littleExtensionTransfer);
 
@@ -146,8 +148,7 @@ public class Outtake implements Enums.Outtake {
                 hardware.servos.get(OuttakeWrist).setPosition(wristTransfer);
                 hardware.servos.get(OuttakeExtension).setPosition(littleExtensionTransfer);
 
-                try { wait(600); }
-                catch (InterruptedException e) {}
+                try { wait(600); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeLeftPivot).setPosition(armTransfer);
                 hardware.servos.get(OuttakeRightPivot).setPosition(armTransfer);
@@ -166,31 +167,54 @@ public class Outtake implements Enums.Outtake {
 
     public void setAction(OuttakeAction action) {
         switch (action) {
+            case DISABLE: {
+                setArmAction(ArmAction.DISABLE);
+                extension.disable();
+            } break;
+
             case INIT: {
                 setArmAction(ArmAction.INIT);
 
-                try { wait(500); }
-                catch (InterruptedException e) {}
+                try { wait(500); } catch (InterruptedException e) {}
 
                 setLiftAction(LiftAction.ZERO);
+
+                try { wait(300); } catch (InterruptedException e) {}
+
+                extension.disable();
             } break;
 
             case HANG: {
-                setArmAction(ArmAction.HANG);
                 setLiftAction(LiftAction.FULL);
+
+                try { wait(500); } catch (InterruptedException e) {}
+
+                setArmAction(ArmAction.HANG);
             } break;
 
             case TRANSFER: {
                 if (lastAction == OuttakeAction.COLLECT) {
+                    setLiftAction(LiftAction.COLLECT);
+
+                    try { wait(500); } catch (InterruptedException e) {}
+
                     setArmAction(ArmAction.TRANSFER);
                     setLiftAction(LiftAction.ZERO);
+
+                    try { wait(300); } catch (InterruptedException e) {}
+
+                    extension.disable();
+
                 } else {
                     setArmAction(ArmAction.TRANSFER);
 
-                    try { wait(500); }
-                    catch (InterruptedException e) {}
+                    try { wait(500); } catch (InterruptedException e) {}
 
                     setLiftAction(LiftAction.ZERO);
+
+                    try { wait(300); } catch (InterruptedException e) {}
+
+                    extension.disable();
                 }
             } break;
 
@@ -199,13 +223,21 @@ public class Outtake implements Enums.Outtake {
                 if (extension.getPosition() <= LiftAction.COLLECT.ticks) {
                     setLiftAction(LiftAction.COLLECT);
 
-                    try { wait(1000); }
-                    catch (InterruptedException e) {}
+                    try { wait(500); } catch (InterruptedException e) {}
 
                     setArmAction(ArmAction.COLLECT);
+
+                    try { wait(300); } catch (InterruptedException e) {}
+
+                    setLiftAction(LiftAction.ZERO);
+
+                    try { wait(300); } catch (InterruptedException e) {}
+
+                    extension.disable();
                 } else {
                     setArmAction(ArmAction.COLLECT);
-                    setLiftAction(LiftAction.COLLECT);
+                    setLiftAction(LiftAction.ZERO);
+                    extension.disable();
                 }
             } break;
 
@@ -236,4 +268,6 @@ public class Outtake implements Enums.Outtake {
     }
 
     public void extend(double power) { extension.extend(power); }
+
+    public OuttakeAction getAction() { return lastAction; }
 }

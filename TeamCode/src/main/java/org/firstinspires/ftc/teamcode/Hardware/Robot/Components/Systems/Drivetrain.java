@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Hardware.Robot.Components;
+package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.TRACK_LENGTH;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.TRACK_WIDTH;
@@ -9,16 +9,17 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Rig
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
-public class MecanumDrive {
+public class Drivetrain {
     private static Hardware hardware;
     private static LinearOpMode opMode;
 
     private final double sum;
     private double LF, RF, LB, RB;
 
-    public MecanumDrive(LinearOpMode opMode) {
+    public Drivetrain(LinearOpMode opMode) {
         hardware = Hardware.getInstance(opMode.hardwareMap);
 
         this.opMode = opMode;
