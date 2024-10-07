@@ -7,16 +7,27 @@ import java.util.List;
 
 public class Transformations {
 
-    public static Pose2d Pose_2_Pose2d(Pose pose) { return new Pose2d(pose.x, pose.y, pose.heading); }
-
-    public static Pose Pose2d_2_Pose(Pose2d pose) { if (pose != null) return new Pose(pose.getX(), pose.getY(), pose.getHeading());
-    return new Pose(); }
-
-    public static List<Double> doubleMatrix_2_doubleList(double[][] matrix) {
-        return Arrays.asList(matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3]);
+    public static Pose2d toRoadrunnerPose(Pose pose) {
+        if (pose != null)
+            return new Pose2d(
+                    toIN(pose.x),
+                    toIN(pose.y),
+                    Math.toRadians(pose.heading));
+        return new Pose2d();
     }
 
-    public static double inches_2_cm(double in) { return in * 2.54; }
+    // from inches and radians to cm and degrees
+    public static Pose toCustomPose(Pose2d pose) {
+        if (pose != null)
+            return new Pose(toCM(pose.getX()),
+                            toCM(pose.getY()),
+                            Math.toDegrees(pose.getHeading()));
+    return new Pose();
+    }
 
-    public static double cm_2_inches(double cm) { return cm / 2.54; }
+
+
+    public static double toCM(double in) { return in * 2.54; }
+
+    public static double toIN(double cm) { return cm / 2.54; }
 }

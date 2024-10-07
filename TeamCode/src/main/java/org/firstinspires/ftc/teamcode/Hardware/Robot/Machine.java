@@ -21,14 +21,18 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.AprilTagCamera;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Camera;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Pipelines.PropDetectionPipeline;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.ScorringSystem;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR.ThreeWheel;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR.TwoWheel;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
+import org.firstinspires.ftc.teamcode.Pathing.PathFollowers.GenericFollower;
 
 import javax.annotation.Nullable;
 
@@ -58,6 +62,9 @@ public class Machine {
 
     private LinearOpMode opMode;
     private Telemetry telemetry;
+
+    public Localizer localizer;
+    public GenericFollower follower;
 
     //default data
     private MachineData data = new MachineData()
@@ -120,6 +127,14 @@ public class Machine {
 
         if (data.sensitivityTrigger == null && data.sensitivityButton == null)
             usingDriveSensitivity = false;
+
+        if (data.opModeType == Enums.OpMode.AUTONOMUS) {
+            switch (data.localizer) {
+                case TWO_WHEELS: localizer = new TwoWheel(opMode);
+                case THREE_WHEELS: localizer = new ThreeWheel(opMode);
+            }
+            follower = new GenericFollower(localizer);
+        }
 
         return this;
     }

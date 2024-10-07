@@ -18,25 +18,22 @@ import javax.annotation.Nullable;
 public class PurePursuit implements Paths {
     private List<Point> pathPoints = new ArrayList<Point>();
 
-    private Point lastFollowedPoint = new Point();
     private Point pointToFollow;
 
-    private int pointsLeft;
-    private int currentLineFirstPoint = 0;
+    private int waypoint = 0;
 
     private double radiusToSearch = 20; //cm
     //TODO: tune this
 
-    private Pose robotPosition;
-    private double circleCenterX, circleCenterY;
+    private Pose pose;
 
-    private boolean isOnSameLine = true;
+    private boolean built = true;
     private boolean isStarted = false, isPaused = false, isBusy= false, isDone = false;
     private boolean useLastPointCorrection = false; //shifting the last point some small value from actual pose and use PID to get to final position
 
-    private Point correctionPoint;
+    private Point lastPointPID;
     private double lastThreePointsDifference = 0;
-    private final double correction = 100; //cm (applies to x and y)
+    private final double correction = 8; //cm (applies to x and y)
     //TODO: tune this too
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -75,6 +72,9 @@ public class PurePursuit implements Paths {
     @Override
     public void resume() { isPaused = false; }
 
+    @Override
+    public void cancel() { isStarted = false; isBusy = false; }
+
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     /**Hierarchy for following points:
@@ -88,88 +88,62 @@ public class PurePursuit implements Paths {
 
     @Override
     public void update() throws NotAPolynomialException {
-        updatePosition();
-
-        if (isStarted && isBusy && !isPaused) {
-            //because we are checking 3 consecutive points in one loop
-            pointsLeft = pathPoints.size() - (currentLineFirstPoint + 3);
-            //TODO: check how many points you still have in the list (special case for 2 and 1)
-
-
-            //has 3 or more points left (can check 2 lines)
-            if (pointsLeft >= lastThreePointsDifference) {
-
-                //check if you find an intersection with the next line
-                List<Point> intersectionsNextLine = findCircleIntersections(
-                        pathPoints.get(currentLineFirstPoint + 1),
-                        pathPoints.get(currentLineFirstPoint + 2));
-
-                //if finding intersections, move onto the next line
-                if (intersectionsNextLine != null) {
-                    currentLineFirstPoint++;
-                    pointsLeft--;
-                    isOnSameLine = false;
-                } else { isOnSameLine = true; }
-            }
-
-
-            //has 2 points left (can still check for points)
-            if(pointsLeft >= lastThreePointsDifference - 1) {
-
-                //find all intersections on the preferred line
-                List<Point> intersectionsCurrentLine = findCircleIntersections(
-                        pathPoints.get(currentLineFirstPoint),
-                        pathPoints.get(currentLineFirstPoint + 1));
-
-                //if none intersections are found, follow last found point
-                if (intersectionsCurrentLine == null) {
-                    pointToFollow = lastFollowedPoint;
-                } else {
-
-                    //if one intersection is found
-                    if (intersectionsCurrentLine.size() == 1) {
-
-                        //if is on the same line, find the desired point (as in the hierarchy)
-                        if (isOnSameLine) {
-                            pointToFollow = findClosestPointToEndOfTheLine(pointToFollow,
-                                    intersectionsCurrentLine.get(0), pathPoints.get(currentLineFirstPoint + 1));
-                        }
-
-                        //if switched on next line, just set the following point as the found point
-                        else {
-                            pointToFollow = intersectionsCurrentLine.get(0);
-                        }
-
-                        //if two intersections are found
-                    } else {
-
-                        //find the desired point (as in the hierarchy)
-                        pointToFollow = findClosestPointToEndOfTheLine(
-                                intersectionsCurrentLine.get(0), intersectionsCurrentLine.get(1),
-                                pathPoints.get(currentLineFirstPoint));
-
-                        if (!isOnSameLine) {
-                            //do another check with the last followed point. We account if, for some reason, the found point make the robot go backwards
-                            pointToFollow = findClosestPointToEndOfTheLine(
-                                    pointToFollow, pathPoints.get(currentLineFirstPoint + 1),
-                                    pathPoints.get(currentLineFirstPoint));
-                        }
-                    }
-                }
-            } else {
-                isBusy = false;
-                isDone = true;
-            }
-
-            lastFollowedPoint = pointToFollow;
+        if (!isStarted || !isBusy || isPaused) {
+            pointToFollow = pose.getPoint();
+            return;
         }
 
+        int remainingPoints = pathPoints.size() - waypoint;
+
+        if (remainingPoints > 2)        handleMultiplePoints();
+        else if (remainingPoints == 2)  handleTwoPoints();
+        else                            completePath();
+
     }
 
-    private void updatePosition() {
-        circleCenterX = robotPosition.x;
-        circleCenterY = robotPosition.y;
+    private void handleMultiplePoints() throws NotAPolynomialException {
+
+        // Check for intersections with the next line segment
+        List<Point> intersectionsNextLine = findCircleIntersections(
+                pathPoints.get(waypoint + 1),
+                pathPoints.get(waypoint + 2));
+
+        // Move to the next line segment if intersections are found
+        if (intersectionsNextLine != null) {
+            findClosestPointToEndOfTheLine(intersectionsNextLine, pathPoints.get(waypoint + 2));
+            waypoint++;
+        } else {
+            // Check for intersections with the current line segment
+            List<Point> intersectionsCurrentLine = findCircleIntersections(
+                    pathPoints.get(waypoint),
+                    pathPoints.get(waypoint + 1));
+
+            // Update the following point if intersections are found
+            if (intersectionsCurrentLine != null)
+                findClosestPointToEndOfTheLine(intersectionsCurrentLine, pathPoints.get(waypoint + 1));
+
+        }
     }
+
+    private void handleTwoPoints() throws NotAPolynomialException {
+
+        // Check for intersections with the current line segment
+        List<Point> intersectionsCurrentLine = findCircleIntersections(
+                pathPoints.get(waypoint),
+                pathPoints.get(waypoint + 1));
+
+        // Update the following point or advance the waypoint if no intersections are found
+        if (intersectionsCurrentLine != null)
+            findClosestPointToEndOfTheLine(intersectionsCurrentLine, pathPoints.get(waypoint + 1));
+        else waypoint++;
+
+    }
+
+    private void completePath() {
+        isBusy = false;
+        isDone = true;
+    }
+
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -181,8 +155,8 @@ public class PurePursuit implements Paths {
         double lineEquation_b = lineEcuationCoefficients.getCoefficient(1).doubleValue();
 
         double a = toPower(lineEquation_a, 2) + 1;
-        double b = 2 * (lineEquation_a * (lineEquation_b - circleCenterY) - circleCenterX);
-        double c = (lineEquation_b - circleCenterY + radiusToSearch) * (lineEquation_b - circleCenterY - radiusToSearch) + toPower(circleCenterX, 2);
+        double b = 2 * (lineEquation_a * (lineEquation_b - pose.y) - pose.x);
+        double c = (lineEquation_b - pose.y + radiusToSearch) * (lineEquation_b - pose.y - radiusToSearch) + toPower(pose.x, 2);
 
         double[] solutions = QuadraticSolve(a, b, c);
         if (solutions == null) { return null; }
@@ -198,12 +172,14 @@ public class PurePursuit implements Paths {
         return intersectingPoints;
     }
 
-    private Point findClosestPointToEndOfTheLine(Point point1, Point point2, Point end) {
-        double firstPointDistance = distanceBetweenTwoPoints(point1, end);
-        double secondPointDistance = distanceBetweenTwoPoints(point2, end);
+    private void findClosestPointToEndOfTheLine(List<Point> solutions, Point end) {
+        if (solutions.size() == 2) {
+            double firstPointDistance = distanceBetweenTwoPoints(solutions.get(0), end);
+            double secondPointDistance = distanceBetweenTwoPoints(solutions.get(1), end);
 
-        if (firstPointDistance < secondPointDistance) return point1;
-        return point2;
+            pointToFollow = (firstPointDistance < secondPointDistance) ? solutions.get(0) : solutions.get(1);
+        } else pointToFollow = solutions.get(0);
+
     }
 
     private double distanceBetweenTwoPoints(Point point1, Point point2) {
@@ -211,11 +187,10 @@ public class PurePursuit implements Paths {
     }
 
     private void addCorrectionLastPoint() {
-        double lastPointX = pathPoints.get(pathPoints.size() - 1).x;
-        double lastPointY = pathPoints.get(pathPoints.size() - 1).y;
+        lastPointPID = pathPoints.get(pathPoints.size() -1);
 
         pathPoints.remove(pathPoints.get(pathPoints.size() - 1));
-        pathPoints.add(new Point(lastPointX - correction, lastPointY - correction));
+        pathPoints.add(new Point(lastPointPID.x - correction, lastPointPID.y - correction));
     }
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -224,12 +199,7 @@ public class PurePursuit implements Paths {
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-    public Pose getPosition() { return robotPosition; }
-
-    @Override
     public Point getPointToFollow() { return pointToFollow; }
-
-    public Point getLastFollowedPoint() { return lastFollowedPoint; }
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -242,9 +212,12 @@ public class PurePursuit implements Paths {
 
     public boolean isDone() { return isDone; }
 
+    @Override
+    public boolean wasBuilt() { return built; }
+
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-    public void setRobotPosition(Pose position) { robotPosition = position; }
+    public void setPose(Pose position) { pose = position; }
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 }

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Pathing.PathBuilders;
 
+import org.firstinspires.ftc.ftccommon.external.OnCreate;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Paths;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Point;
@@ -15,7 +16,7 @@ public class BezierCurve implements Enums.Pathing, Paths {
     private double increment = 0.001; //ranges from 0 to 1
     private double t = 0;
 
-    private boolean isStarted = false, isPaused = false, isBusy= false, isDone = false;
+    private boolean isStarted = false, isPaused = false, isBusy= false, isDone = false, built = false;
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -35,7 +36,7 @@ public class BezierCurve implements Enums.Pathing, Paths {
     }
 
     @Override
-    public void build() {}
+    public void build() { built = true; }
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
@@ -47,6 +48,12 @@ public class BezierCurve implements Enums.Pathing, Paths {
 
     @Override
     public void resume() { isPaused = false; }
+
+    @Override
+    public void cancel() { isStarted = false; isBusy = false; }
+
+    @Override
+    public boolean wasBuilt() { return built; }
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 

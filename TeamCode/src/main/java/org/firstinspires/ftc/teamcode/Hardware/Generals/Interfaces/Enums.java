@@ -30,7 +30,8 @@ public interface Enums {
 
     enum Gamepads{
         G1, G2,
-        BOTH
+        BOTH,
+        NONE
     }
 
     enum Rumbles{ }
@@ -67,10 +68,8 @@ public interface Enums {
         }
 
         enum Localizers {
-            CUSTOM,
-            IMU,
-            ROADRUNNER_THREE_WHEELS,
-            ROADRUNNER_TWO_WHEELS
+            THREE_WHEELS,
+            TWO_WHEELS
         }
     }
 

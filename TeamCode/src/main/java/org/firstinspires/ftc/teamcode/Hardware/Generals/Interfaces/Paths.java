@@ -12,8 +12,10 @@ public interface Paths {
     void start();
     void pause();
     void resume();
+    void cancel();
 
     boolean isBusy();
+    boolean wasBuilt();
 
     Point getPointToFollow();
 

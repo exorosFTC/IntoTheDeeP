@@ -10,8 +10,6 @@ public interface Localizer {
 
     void update();
 
-    void read();
-
     Pose getRobotPosition();
 
     Pose getRobotVelocity();

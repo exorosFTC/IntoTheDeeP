@@ -17,7 +17,6 @@ public class SystemConstants {
     public static final double inTransferThreshold = 0;
     public static final double inIntakeTreshold = 0;
     public static final double overBarThreshold = 0;
-    public static final double encoderMaxTicks = 0;
 
     public static final ColorEx red = new ColorEx(255, 0, 0);
     public static final ColorEx blue = new ColorEx(0, 0, 255);

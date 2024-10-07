@@ -16,7 +16,8 @@ public class TeleOpV1 extends ExoMode {
 
     @Override
     protected void Init() {
-        robot = new Machine().addData(new MachineData()
+        robot = new Machine()
+                .addData(new MachineData()
                         .add(Enums.Telemetry.DASHBOARD)
                         .add(Enums.OpMode.TELE_OP)
                         .getLoopTime(true)

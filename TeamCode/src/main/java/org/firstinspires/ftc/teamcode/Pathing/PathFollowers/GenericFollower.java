@@ -21,6 +21,8 @@ public class GenericFollower {
     private Paths currentFollowedPath;
     private MotionProfile profile;
 
+    private MotionSignal signal = new MotionSignal();
+
     private boolean maintainHeading = false;
     private boolean isStarted;
     private boolean isPaused;
@@ -51,7 +53,7 @@ public class GenericFollower {
     }
 
     public GenericFollower build() {
-        if (pathsToFollow.size() != 0)
+        if (!pathsToFollow.isEmpty())
             currentFollowedPath = pathsToFollow.get(0);
         else currentFollowedPath = null;
 
@@ -64,7 +66,7 @@ public class GenericFollower {
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     public GenericFollower newPurePursuit() {
-        if (!(currentBuildPath instanceof PurePursuit)) { //if isn't a PurePursuit object => you forgot to add last type of Path lmao
+        if (!currentBuildPath.wasBuilt()) { //if isn't built => you forgot to add last type of Path lmao
             currentBuildPath.build();
             pathsToFollow.add(currentBuildPath);
             currentBuildPath = null;
@@ -77,8 +79,8 @@ public class GenericFollower {
         return this;
     }
 
-    public GenericFollower newBezierCurve() {
-        if (!(currentBuildPath instanceof BezierCurve)) { //if isn't a PurePursuit object => you forgot to add last type of Path lmao
+    private GenericFollower IN_WORK_newBezierCurve() {
+        if (!currentBuildPath.wasBuilt()) { //if isn't built => you forgot to add last type of Path lmao
             currentBuildPath.build();
             pathsToFollow.add(currentBuildPath);
             currentBuildPath = null;
@@ -90,7 +92,7 @@ public class GenericFollower {
         return this;
     }
 
-    public GenericFollower newTrapezoidalProfile(double start, double end, ProfileConstrains constrains) {
+    private GenericFollower IN_WORK_newTrapezoidalProfile(double start, double end, ProfileConstrains constrains) {
         profile = new TrapezoidalMotionProfile(start, end, constrains);
 
         return this;
@@ -99,55 +101,56 @@ public class GenericFollower {
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
     public void start() {
-        isStarted = true;
+        if (currentFollowedPath != null)
+            currentFollowedPath.start();
     }
 
     public void pause() {
         if (currentFollowedPath != null)
             currentFollowedPath.pause();
-        isPaused = true;
     }
 
     public void resume() {
         if (currentFollowedPath != null)
             currentFollowedPath.resume();
-        isPaused = false;
+    }
+
+    public void cancel() {
+        if (currentFollowedPath != null)
+            currentFollowedPath.cancel();
     }
 
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
-    public MotionSignal generateSignal() throws NotAPolynomialException {
+    private void generateSignal() throws NotAPolynomialException {
         currentFollowedPath.update();
 
         Point currentFollowedPoint = currentFollowedPath.getPointToFollow();
         double heading = 0;
 
-        if (!maintainHeading) { //you have 2 points and you want to face the target point, so you find the angle between the 2 points, easy
+        if (!maintainHeading) { // you have 2 points and you want to face the target point, so you find the angle between the 2 points, easy
             heading = Math.atan2(currentFollowedPoint.y - currentRobotPose.y,
                     currentRobotPose.x - currentRobotPose.y);
-        } else { heading = currentRobotPose.heading; } //just maintain heading, cuz why not
+        } else { heading = currentRobotPose.heading; } // just maintain heading, cuz why not
 
-        MotionSignal signal = new MotionSignal();
         signal.velocity = new Pose(currentFollowedPoint.subtract(currentRobotPose.getPoint()).multiplyBy(1), heading * 1);
-
-        return signal;
     }
 
     //call this every loop
-    public void read(){
+    public void update(){
         if (!currentFollowedPath.isBusy() && isStarted && !isPaused) {
             currentFollowedPath = pathsToFollow.iterator().hasNext() ? pathsToFollow.iterator().next() : null;
             if (currentFollowedPath != null)
                 currentFollowedPath.start();
         }
 
-        localizer.read();
         localizer.update();
         currentRobotPose = localizer.getRobotPosition();
 
         if (currentFollowedPath instanceof PurePursuit)
-            ((PurePursuit) currentFollowedPath).setRobotPosition(currentRobotPose);
+            ((PurePursuit) currentFollowedPath).setPose(currentRobotPose);
 
+        try { generateSignal(); } catch (NotAPolynomialException e) {}
     }
 
     public boolean isBusy() {
