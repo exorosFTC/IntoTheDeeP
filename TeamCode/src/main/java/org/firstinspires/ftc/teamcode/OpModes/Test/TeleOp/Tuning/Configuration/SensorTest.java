@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp.Tuning.Configuration;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RevColorNameList;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.ServoNamesList;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
@@ -7,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -16,11 +20,11 @@ import java.util.List;
 @TeleOp(name = "ConfigureSensor", group = "tuning")
 public class SensorTest extends LinearOpMode {
     private ColorSensor sensor;
-    private List<String> names = Arrays.asList("pixel1", "pixel2", "ramp_sensor");
+    private int index = 0;
     private Telemetry dashboardTelemetry;
     @Override
     public void runOpMode() throws InterruptedException {
-        sensor = hardwareMap.get(ColorSensor.class, names.get(2));
+        sensor = hardwareMap.get(RevColorSensorV3.class, RevColorNameList.get(index));
         dashboardTelemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         waitForStart();

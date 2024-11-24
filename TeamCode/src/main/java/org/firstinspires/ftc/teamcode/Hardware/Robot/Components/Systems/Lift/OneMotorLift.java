@@ -31,9 +31,6 @@ public class OneMotorLift {
         this.opMode = opMode;
 
         this.motor = motor;
-
-        hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        hardware.motors.get(motor).setPower(1);
     }
 
 
@@ -77,6 +74,8 @@ public class OneMotorLift {
         int position = Math.min(MAX, Math.max(MIN, values.get(key).intValue()));
 
         hardware.motors.get(motor).setTargetPosition(position);
+        hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        hardware.motors.get(motor).setPower(1);
     }
 
     // input [-1, 1] ---- joystick input
@@ -87,6 +86,8 @@ public class OneMotorLift {
         position = Math.min(MAX, Math.max(MIN, position));
 
         hardware.motors.get(motor).setTargetPosition(position);
+        hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        hardware.motors.get(motor).setPower(1);
     }
 
     public int getPosition() {
@@ -100,10 +101,10 @@ public class OneMotorLift {
             extend(-1);
 
         hardware.motors.get(motor).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public boolean constrained() {
         return hardware.motors.get(motor).isOverCurrent();
     }
+
 }

@@ -23,6 +23,9 @@ public class TwoMotorLift {
     private double amps = 1.5;
     private int diff;
 
+    private double gearRatioLeft = 1.0;
+    private double gearRatioRight = 1.0;
+
     private final String
         LEFT, RIGHT;
 
@@ -64,6 +67,13 @@ public class TwoMotorLift {
         return this;
     }
 
+    public TwoMotorLift addGearRatios(double leftRatio, double rightRatio) {
+        this.gearRatioLeft = leftRatio;
+        this.gearRatioRight = rightRatio;
+
+        return this;
+    }
+
     public TwoMotorLift addCurrentAlert(double amps) {
         this.amps = amps;
 
@@ -88,19 +98,20 @@ public class TwoMotorLift {
     public void setPosition(String key) {
         int position = Math.min(MAX, Math.max(MIN, values.get(key).intValue()));
 
-        hardware.motors.get(LEFT).setTargetPosition(position);
-        hardware.motors.get(RIGHT).setTargetPosition(position);
+        hardware.motors.get(LEFT).setTargetPosition((int) (position * gearRatioLeft));
+        hardware.motors.get(RIGHT).setTargetPosition((int) (position * gearRatioRight));
     }
 
     // input [-1, 1] ---- joystick input
     public void extend(double power) {
         int pastPosition = hardware.motors.get(LEFT).getCurrentPosition();
+
         int position = pastPosition + (int) (this.diff * manualLiftCoefficient * power);
 
         position = Math.min(MAX, Math.max(MIN, position));
 
         hardware.motors.get(LEFT).setTargetPosition(position);
-        hardware.motors.get(RIGHT).setTargetPosition(position);
+        hardware.motors.get(RIGHT).setTargetPosition((int) (position * (gearRatioRight / gearRatioLeft)));
     }
 
     public int getPosition() {

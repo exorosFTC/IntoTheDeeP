@@ -39,17 +39,15 @@ public interface Enums {
 
 
     enum IntakeAction{
-        INIT,
-        SPIT,
-        STOP,
         COLLECT,
+        PRE_COLECT,
         TRANSFER,
-        DISABLE
     }
 
     enum Color{
         RED,
         BLUE,
+        YELLOW,
         NONE
     }
 
@@ -75,12 +73,10 @@ public interface Enums {
 
     interface Outtake {
         enum ArmAction{
+            PRE_TRANSFER,
             TRANSFER,
-            DISABLE,
-            COLLECT,
-            SCORE,
-            HANG,
-            INIT
+            PRE_SCORE,
+            SCORE
         }
 
         enum LiftAction{

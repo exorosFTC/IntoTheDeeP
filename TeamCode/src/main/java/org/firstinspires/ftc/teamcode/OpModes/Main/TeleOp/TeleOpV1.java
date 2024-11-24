@@ -72,12 +72,12 @@ public class TeleOpV1 extends ExoMode {
         else if (robot.g2.isDown(GamepadKeys.Button.RIGHT_BUMPER)) {
 
             if (robot.g2.wasJustPressed(GamepadKeys.Button.DPAD_UP))
-                robot.system.intake.setAction(Enums.IntakeAction.INIT);
+                robot.system.intake.setAction(Enums.IntakeAction.COLLECT);
             else if (robot.g2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
                 robot.system.intake.setAction(Enums.IntakeAction.COLLECT);
 
             if (robot.g2.wasJustPressed(GamepadKeys.Button.A))
-                robot.system.intake.setAction(Enums.IntakeAction.SPIT);
+                robot.system.intake.setAction(Enums.IntakeAction.COLLECT);
 
             robot.system.intake.extend(-robot.g2.getLeftY());
         }

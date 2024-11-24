@@ -10,7 +10,6 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Rev
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RevTouchNameList;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.ServoNamesList;
 
-import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
@@ -20,6 +19,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
@@ -35,7 +35,7 @@ public class Hardware {
 
 
 
-    public Map<String, ServoEx> servos = new HashMap<>();
+    public Map<String, Servo> servos = new HashMap<>();
     public Map<String , CRServo> CRservos = new HashMap<>();
 
     public Map<String, AnalogInput> analog = new HashMap<>();
@@ -67,7 +67,7 @@ public class Hardware {
         // add all servos into a list
         for (String servoName : ServoNamesList)
             if (!servoName.isEmpty())
-                servos.put(servoName, hardwareMap.get(ServoEx.class, servoName));
+                servos.put(servoName, hardwareMap.get(Servo.class, servoName));
 
         for (String CRServoName: CRServoNamesList)
             if (!CRServoName.isEmpty())

@@ -30,19 +30,20 @@ public class HardwareNames {
 
     // TODO: tune these
     // If you use 2 or no odometry at all, set the names to "" (empty string)
-    public static final String LeftOdometry = LeftFront;
-    public static final String RightOdometry = LeftBack;
-    public static final String PerpendicularOdometry = RightFront;
+    public static final String LeftOdometry = "";
+    public static final String RightOdometry = "";
+    public static final String PerpendicularOdometry = "";
 
     // you can leave these as they are
     public static final List<String> EncoderNamesList = Arrays.asList(
-            LeftOdometry, RightOdometry, PerpendicularOdometry);
+    );
 
 
 
     // TODO: add additional hardware components in the lists below
-    public static final String IntakeDropdown = "intakeDropdown";
-    public static final String IntakeStopper = "intakeStopper";
+    public static final String IntakeV4B = "IntakeV4B";
+    public static final String IntakeClaw = "intakeClaw";
+    public static final String IntakeRotation = "intakeRotation";
 
     public static final String OuttakeLeftPivot = "outtakeLeft";
     public static final String OuttakeRightPivot = "outtakeRight";
@@ -52,37 +53,30 @@ public class HardwareNames {
     public static final String OuttakeClaw = "outtakeClaw";
 
     public static List<String> ServoNamesList = Arrays.asList(
-            IntakeDropdown, IntakeStopper,
-            OuttakeLeftPivot, OuttakeRightPivot, OuttakeExtension, OuttakeWrist, OuttakeClaw
+            IntakeV4B, IntakeClaw, IntakeRotation,
+            OuttakeRightPivot, OuttakeWrist
     );
 
 
 
-    public static final String IntakeLeftServo = "intakeLeft";
-    public static final String IntakeRightServo = "intakeRight";
 
-    public static List<String> CRServoNamesList = Arrays.asList(
-            IntakeLeftServo, IntakeRightServo
-    );
-
+    public static List<String> CRServoNamesList = Arrays.asList("", "");
     public static List<String> DigitalNamesList = Arrays.asList("", "");
     public static List<String> AnalogNamesList = Arrays.asList("", "");
 
 
 
-    public static final String IntakeDistance = "intakeDistanceSensor";
-    public static final String TransferDistance = "transferDistanceSensor";
 
-    public static List<String> RevDistanceNameList = Arrays.asList(
-            IntakeDistance, TransferDistance
-    );
+
+    public static List<String> RevDistanceNameList = Arrays.asList();
 
 
 
-    public static final String IntakeColor = "intakeColor";
+    public static final String OuttakeColor = "outtakeColorSensor";
+    public static final String IntakeColor = "intakeColorSensor";
 
     public static List<String> RevColorNameList = Arrays.asList(
-            IntakeColor
+            IntakeColor, OuttakeColor
     );
 
 

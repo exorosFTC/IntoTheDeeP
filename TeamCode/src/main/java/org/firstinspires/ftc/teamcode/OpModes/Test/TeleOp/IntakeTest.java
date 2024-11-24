@@ -35,10 +35,7 @@ public class IntakeTest extends ExoMode {
             if (g2.wasJustPressed(GamepadKeys.Button.DPAD_UP))
                 intake.setAction(Enums.IntakeAction.TRANSFER);
 
-            if (g2.wasJustPressed(GamepadKeys.Button.A))
-                intake.setAction(Enums.IntakeAction.SPIT);
-
-            intake.extend(-g2.getLeftY());
+            intake.extend(g2.getLeftY());
         }
 
         g2.readButtons();

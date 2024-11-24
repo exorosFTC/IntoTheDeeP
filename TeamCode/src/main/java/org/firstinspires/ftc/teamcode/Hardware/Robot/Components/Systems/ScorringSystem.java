@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.inTransferThreshold;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeExtensionTouch;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.TransferDistance;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -28,14 +26,11 @@ public class ScorringSystem {
 
 
     public void update() {
-        intake.update();
-
-        checkAutoTransfer();
         checkIntakeExtension();
     }
 
     public void reset() {
-        intake.setAction(Enums.IntakeAction.INIT);
+        intake.setAction(Enums.IntakeAction.TRANSFER);
         outtake.setAction(Enums.Outtake.OuttakeAction.INIT);
 
         intake.extension.reset();
@@ -44,31 +39,7 @@ public class ScorringSystem {
 
 
 
-    private void checkAutoTransfer() {
-        if (hardware.distance.get(TransferDistance).getDistance(DistanceUnit.CM) > inTransferThreshold
-                                                &&
-                intake.getAction() == Enums.IntakeAction.TRANSFER
-        ) {
-            outtake.setAction(Enums.Outtake.OuttakeAction.TRANSFER);
 
-            try { wait(400); } catch (InterruptedException e) {}
-
-            outtake.openClaw(false);
-
-            try { wait(200); } catch (InterruptedException e) {}
-
-            outtake.setAction(Enums.Outtake.OuttakeAction.INIT);
-
-            try { wait(300); } catch (InterruptedException e) {}
-
-            intake.setAction(Enums.IntakeAction.INIT);
-
-            try { wait(300); } catch (InterruptedException e) {}
-
-            intake.setAction(Enums.IntakeAction.DISABLE);
-
-        }
-    }
 
     private void checkIntakeExtension() {
         if (!hardware.touch.get(IntakeExtensionTouch).isPressed()

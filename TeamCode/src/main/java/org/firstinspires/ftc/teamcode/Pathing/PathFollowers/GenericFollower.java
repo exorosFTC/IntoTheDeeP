@@ -157,5 +157,7 @@ public class GenericFollower {
         return currentFollowedPath != null && !isPaused;
     }
 
+    public MotionSignal getMotionSignal() { return signal; }
+    
     public void maintainHeading(boolean maintainHeading) { this.maintainHeading = maintainHeading; }
 }

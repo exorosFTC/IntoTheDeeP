@@ -12,8 +12,8 @@ public class MecanumConstants {
     public static final double ODOMETRY_TICKS_PER_REVOLUTION = 8192;
     public static final double ODOMETRY_WHEEL_RADIUS_CM = 4;
 
-    public static final double TRACK_LENGTH = 0;
-    public static final double TRACK_WIDTH = 0;
+    public static final double TRACK_LENGTH = 29;
+    public static final double TRACK_WIDTH = 23;
 
     public static final double ODOMETRY_LEFT_X_OFFSET_CM = 0;
     public static final double ODOMETRY_RIGHT_X_OFFSET_CM = 0;
