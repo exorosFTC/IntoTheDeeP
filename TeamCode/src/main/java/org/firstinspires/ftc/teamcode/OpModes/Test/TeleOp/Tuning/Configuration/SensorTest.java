@@ -13,14 +13,15 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Arrays;
 import java.util.List;
 
 @TeleOp(name = "ConfigureSensor", group = "tuning")
 public class SensorTest extends LinearOpMode {
-    private ColorSensor sensor;
-    private int index = 0;
+    private ColorRangeSensor sensor;
+    private int index = 1;
     private Telemetry dashboardTelemetry;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -34,6 +35,7 @@ public class SensorTest extends LinearOpMode {
             dashboardTelemetry.addData("Red: ", sensor.red());
             dashboardTelemetry.addData("Green: ", sensor.green());
             dashboardTelemetry.addData("Blue: ", sensor.blue());
+            dashboardTelemetry.addData("Distance: ", sensor.getDistance(DistanceUnit.MM));
             dashboardTelemetry.update();
         }
 

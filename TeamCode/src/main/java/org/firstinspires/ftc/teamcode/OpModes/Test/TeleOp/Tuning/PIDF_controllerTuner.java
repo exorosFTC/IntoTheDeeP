@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp.Tuning;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOuttakeMotor;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightOuttakeMotor;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -25,7 +28,7 @@ import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigu
 public class PIDF_controllerTuner extends LinearOpMode {
     /**To be tuned: */
     private PIDController controller;
-    private final double ticks_in_degree = 36 / 14;
+    private final double ticks_in_degree = 537.7 / 360;
 
 
     public static double p = 0.01, d = 0;
@@ -35,8 +38,8 @@ public class PIDF_controllerTuner extends LinearOpMode {
     private DcMotorEx leftMotor, rightMotor;
 
     //TODO: rename the hardware calls in conformation with YOUR configuration
-    private String LEFT = "leftOuttake";
-    private String RIGHT = "rightOuttake";
+    private String LEFT = LeftOuttakeMotor;
+    private String RIGHT = RightOuttakeMotor;
 
     private double startLoopTime, endLoopTime;
     private double secondsToNanoseconds = 1000000000;
@@ -53,7 +56,7 @@ public class PIDF_controllerTuner extends LinearOpMode {
         initializeMotor(leftMotor, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         initializeMotor(rightMotor, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         controller = new PIDController(p, 0, d);
 
@@ -63,25 +66,25 @@ public class PIDF_controllerTuner extends LinearOpMode {
             startLoopTime = endLoopTime;
 
             int motorPositionL = leftMotor.getCurrentPosition();
-            int motorPositionR = rightMotor.getCurrentPosition();
+            //int motorPositionR = rightMotor.getCurrentPosition();
 
             controller.setPID(p, 0, d);
             double pid = controller.calculate(motorPositionL, target);
             double ff = Math.cos(Math.toRadians(target / ticks_in_degree)) * f;
             double power = pid + ff;
 
-            controller.setPID(p, 0, d);
-            double pidR = controller.calculate(motorPositionR, target);
-            double powerR = pidR + ff;
+            //controller.setPID(p, 0, d);
+            //double pidR = controller.calculate(motorPositionR, target);
+            //double powerR = pidR + ff;
 
             leftMotor.setPower(power);
-            rightMotor.setPower(powerR);
+            rightMotor.setPower(power);
 
             endLoopTime = System.nanoTime();
 
             telemetry.addData("Position Left:  ", motorPositionL);
-            telemetry.addData("Position Right:  ", motorPositionR);
-            telemetry.addData("POWER: ", powerR);
+            telemetry.addData("Position Right:  ", motorPositionL);
+            telemetry.addData("POWER: ", power);
             telemetry.addData("target ", target);
             telemetry.addData("Loop time: ", secondsToNanoseconds / (endLoopTime - startLoopTime));
 

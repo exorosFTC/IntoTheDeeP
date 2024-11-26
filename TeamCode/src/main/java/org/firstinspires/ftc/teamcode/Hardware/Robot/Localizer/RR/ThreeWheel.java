@@ -58,7 +58,7 @@ public class ThreeWheel extends ThreeTrackingWheelLocalizer implements Localizer
                 new Pose2d(FRONT_DISTANCE, 0, Math.toRadians(90)) // front/back/perpendicular
         ));
 
-        hardware = Hardware.getInstance(opMode.hardwareMap);
+        hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
 
         left = new Encoder(hardware.motors.get(LeftOdometry));
         right = new Encoder(hardware.motors.get(RightOdometry));

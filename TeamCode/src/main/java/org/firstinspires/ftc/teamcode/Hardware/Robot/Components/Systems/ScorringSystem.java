@@ -4,7 +4,6 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Int
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems.Intake;
@@ -17,7 +16,7 @@ public class ScorringSystem {
     public Outtake outtake;
 
     public ScorringSystem(LinearOpMode opMode) {
-        hardware = Hardware.getInstance(opMode.hardwareMap);
+        hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
 
         intake = new Intake(opMode);
         outtake = new Outtake(opMode);
@@ -34,7 +33,7 @@ public class ScorringSystem {
         outtake.setAction(Enums.Outtake.OuttakeAction.INIT);
 
         intake.extension.reset();
-        outtake.extension.reset();
+        outtake.extension.autoReset();
     }
 
 

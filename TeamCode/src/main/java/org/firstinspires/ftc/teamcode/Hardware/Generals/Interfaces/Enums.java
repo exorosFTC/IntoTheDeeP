@@ -34,7 +34,10 @@ public interface Enums {
         NONE
     }
 
-    enum Rumbles{ }
+    enum Rumbles{
+        INTAKE,
+        OUTTAKE
+    }
 
 
 

@@ -104,7 +104,7 @@ public class Machine {
 
     public Machine construct(LinearOpMode opMode) {
         this.bulk = new HubBulkRead(opMode.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
-        this.hardware = Hardware.getInstance(opMode.hardwareMap);
+        this.hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
         this.opMode = opMode;
 
         batteryVoltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
@@ -257,5 +257,10 @@ public class Machine {
         if (telemetry != null) {
             telemetry.addData("Drive", 0);
         }
+    }
+
+
+
+    public void setAccess(Enums.Rumbles rumble) {
     }
 }

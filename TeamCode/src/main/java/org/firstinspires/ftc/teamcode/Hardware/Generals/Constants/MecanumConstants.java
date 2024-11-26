@@ -4,16 +4,20 @@ public class MecanumConstants {
     public static boolean usingDriveSensitivity = false;
     public static boolean usingButtonSensitivity = false;
     public static boolean usingVelocityToggle = true;
+    public static boolean usingAcceleration = true;
+    public static boolean usingExponentialInput = true;
 
     public static final double fastConstrainScalar = 1;
     public static final double slowConstrainScalar = 0.4;
+    public static final double accelerationScalar = 0.01;
+
 
     // ODOMETRY CONSTANTS
     public static final double ODOMETRY_TICKS_PER_REVOLUTION = 8192;
     public static final double ODOMETRY_WHEEL_RADIUS_CM = 4;
 
     public static final double TRACK_LENGTH = 29;
-    public static final double TRACK_WIDTH = 23;
+    public static final double TRACK_WIDTH = 10; //23 og, but it's turning too fast
 
     public static final double ODOMETRY_LEFT_X_OFFSET_CM = 0;
     public static final double ODOMETRY_RIGHT_X_OFFSET_CM = 0;

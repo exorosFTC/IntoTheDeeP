@@ -54,7 +54,7 @@ public class TwoWheel extends TwoTrackingWheelLocalizer implements Localizer {
                 new Pose2d(PERPENDICULAR_X, 0, Math.toRadians(90))
         ));
 
-        hardware = Hardware.getInstance(opMode.hardwareMap);
+        hardware = Hardware.getInstance(opMode.hardwareMap, hardware.telemetry);
 
         parallelEncoder = new Encoder(hardware.motors.get(LeftOdometry));
         perpendicularEncoder = new Encoder(hardware.motors.get(PerpendicularOdometry));

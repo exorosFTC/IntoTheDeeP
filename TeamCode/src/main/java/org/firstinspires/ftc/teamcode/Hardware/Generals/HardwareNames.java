@@ -30,12 +30,13 @@ public class HardwareNames {
 
     // TODO: tune these
     // If you use 2 or no odometry at all, set the names to "" (empty string)
-    public static final String LeftOdometry = "";
+    public static final String LeftOdometry = LeftFront;
     public static final String RightOdometry = "";
-    public static final String PerpendicularOdometry = "";
+    public static final String PerpendicularOdometry = RightBack;
 
     // you can leave these as they are
     public static final List<String> EncoderNamesList = Arrays.asList(
+            LeftOdometry, PerpendicularOdometry
     );
 
 
@@ -53,8 +54,8 @@ public class HardwareNames {
     public static final String OuttakeClaw = "outtakeClaw";
 
     public static List<String> ServoNamesList = Arrays.asList(
-            IntakeV4B, IntakeClaw, IntakeRotation,
-            OuttakeRightPivot, OuttakeWrist
+            IntakeV4B, IntakeClaw,
+            OuttakeLeftPivot, OuttakeRightPivot, OuttakeExtension, OuttakeWrist, OuttakeClaw
     );
 
 

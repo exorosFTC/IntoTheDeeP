@@ -27,16 +27,13 @@ public class IntakeTest extends ExoMode {
 
     @Override
     protected void Loop() {
-        if (g2.isDown(GamepadKeys.Button.RIGHT_BUMPER)) {
+        if (g2.wasJustPressed(GamepadKeys.Button.B))
+            intake.setAction(Enums.IntakeAction.COLLECT);
 
-            if (g2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
-                intake.setAction(Enums.IntakeAction.COLLECT);
+        if (g2.wasJustPressed(GamepadKeys.Button.A))
+            intake.setAction(Enums.IntakeAction.TRANSFER);
 
-            if (g2.wasJustPressed(GamepadKeys.Button.DPAD_UP))
-                intake.setAction(Enums.IntakeAction.TRANSFER);
-
-            intake.extend(g2.getLeftY());
-        }
+        intake.extend(g2.getLeftY());
 
         g2.readButtons();
 

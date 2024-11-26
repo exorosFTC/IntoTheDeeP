@@ -1,13 +1,16 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.manualLiftCoefficient;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeTicksPerDegree;
 
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
+import org.firstinspires.ftc.teamcode.Hardware.Util.MotionHardware.Init;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,23 +29,24 @@ public class TwoMotorLift {
     private double gearRatioLeft = 1.0;
     private double gearRatioRight = 1.0;
 
+    private final double p = 0, d = 0, f = 0;
+    private PIDController controller;
+
     private final String
         LEFT, RIGHT;
 
 
 
     public TwoMotorLift(LinearOpMode opMode, String left, String right) {
-        this.hardware = Hardware.getInstance(opMode.hardwareMap);
+        this.hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
         this.opMode = opMode;
+
+        controller = new PIDController(p, 0, d);
 
         LEFT = left;
         RIGHT = right;
 
-        hardware.motors.get(LEFT).setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        hardware.motors.get(RIGHT).setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        hardware.motors.get(LEFT).setPower(1);
-        hardware.motors.get(RIGHT).setPower(1);
+        resetEncoders();
     }
 
 
@@ -94,24 +98,61 @@ public class TwoMotorLift {
     }
 
 
+    public void resetEncoders() {
+        hardware.motors.put(LEFT, Init.initializeMotor(hardware.motors.get(LEFT), DcMotor.RunMode.RUN_WITHOUT_ENCODER));
+        hardware.motors.put(RIGHT, Init.initializeMotor(hardware.motors.get(RIGHT), DcMotor.RunMode.RUN_WITHOUT_ENCODER));
+    }
+
+
 
     public void setPosition(String key) {
         int position = Math.min(MAX, Math.max(MIN, values.get(key).intValue()));
+        int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
 
-        hardware.motors.get(LEFT).setTargetPosition((int) (position * gearRatioLeft));
-        hardware.motors.get(RIGHT).setTargetPosition((int) (position * gearRatioRight));
+        double pid = controller.calculate(currentPosition, position);
+        double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
+        double power = pid + ff;
+
+        if (power > 1)
+            power = 1;
+        if (power < -1)
+            power = -1;
+
+        double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
+        double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;
+
+        hardware.motors.get(LEFT).setPower(leftPower);
+        hardware.motors.get(RIGHT).setPower(rightPower);
     }
+
+    public void setPosition(int pos) {
+        int position = Math.min(MAX, Math.max(MIN, pos));
+        int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
+
+        double pid = controller.calculate(currentPosition, position);
+        double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
+        double power = pid + ff;
+
+        if (power > 1)
+            power = 1;
+        if (power < -1)
+            power = -1;
+
+        double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
+        double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;
+
+        hardware.motors.get(LEFT).setPower(leftPower);
+        hardware.motors.get(RIGHT).setPower(rightPower);
+    }
+
+
 
     // input [-1, 1] ---- joystick input
     public void extend(double power) {
         int pastPosition = hardware.motors.get(LEFT).getCurrentPosition();
-
         int position = pastPosition + (int) (this.diff * manualLiftCoefficient * power);
 
-        position = Math.min(MAX, Math.max(MIN, position));
-
-        hardware.motors.get(LEFT).setTargetPosition(position);
-        hardware.motors.get(RIGHT).setTargetPosition((int) (position * (gearRatioRight / gearRatioLeft)));
+        setPosition(position);
     }
 
     public int getPosition() {
@@ -123,15 +164,11 @@ public class TwoMotorLift {
         hardware.motors.get(RIGHT).setMotorDisable();
     }
 
-    public void reset() {
+    public void autoReset() {
         while (opMode.opModeIsActive() && !constrained())
             extend(-1);
 
-        hardware.motors.get(LEFT).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        hardware.motors.get(RIGHT).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        hardware.motors.get(LEFT).setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        hardware.motors.get(RIGHT).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+       resetEncoders();
     }
 
     public boolean constrained() {

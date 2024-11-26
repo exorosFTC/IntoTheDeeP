@@ -29,21 +29,22 @@ public class Outtake implements Enums.Outtake {
     public final TwoMotorLift extension;
 
     private static final double
-            clawOpen = 0.45,
-            clawClosed = 0.73;
+            clawOpen = 0.65,
+            clawClosed = 0.9;
 
     private static final double
             armTransfer = 0,
-            armScore = 0;
+            armScore = 0.75;
 
     private static final double // [0.05, 0.50] --- retracted / full extension
-            extendoTransfer = 0.58,
-            extendoPreScore = 0.5,
-            extendoScore = 0.05;
+            extendoTransfer = 0.5,
+            extendoPreScore = 0.82,
+            extendoScore = 0.47;
+
 
     private static final double
-            wristTransfer = 0,
-            wristScore = 0;
+            wristTransfer = 0.7,
+            wristScore = 0.55;
 
     private static final double // mm
             inverseMIN = 0,
@@ -68,7 +69,7 @@ public class Outtake implements Enums.Outtake {
 
 
     public Outtake(LinearOpMode opMode) {
-        hardware = Hardware.getInstance(opMode.hardwareMap);
+        hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
         hardware.servos.get(OuttakeRightPivot).setDirection(Servo.Direction.REVERSE);
 
         this.opMode = opMode;
@@ -96,7 +97,7 @@ public class Outtake implements Enums.Outtake {
         else openClaw(true);
     }
 
-    private void setArmAction(ArmAction action) {
+    public void setArmAction(ArmAction action) {
         switch (action) {
             case PRE_SCORE: {
                 if (hardware.servos.get(OuttakeRightPivot).getPosition() != armScore) {
@@ -130,18 +131,15 @@ public class Outtake implements Enums.Outtake {
             } break;
 
             case PRE_TRANSFER: {
-                if (hardware.servos.get(OuttakeWrist).getPosition() != wristTransfer)
-                    hardware.servos.get(OuttakeWrist).setPosition(wristTransfer);
+                hardware.servos.get(OuttakeWrist).setPosition(wristTransfer);
 
-                if (hardware.servos.get(OuttakeExtension).getPosition() != extendoTransfer)
-                    hardware.servos.get(OuttakeExtension).setPosition(extendoTransfer);
+                hardware.servos.get(OuttakeExtension).setPosition(extendoTransfer);
 
                 try { Thread.sleep(100); } catch (InterruptedException e) {}
 
-                if (hardware.servos.get(OuttakeLeftPivot).getPosition() != armTransfer) {
-                    hardware.servos.get(OuttakeLeftPivot).setPosition(armTransfer);
-                    hardware.servos.get(OuttakeRightPivot).setPosition(armTransfer);
-                }
+                hardware.servos.get(OuttakeLeftPivot).setPosition(armTransfer);
+                hardware.servos.get(OuttakeRightPivot).setPosition(armTransfer);
+
 
                 try { Thread.sleep(100); } catch (InterruptedException e) {}
 
@@ -174,11 +172,11 @@ public class Outtake implements Enums.Outtake {
             case INIT: {
                 setArmAction(ArmAction.PRE_TRANSFER);
 
-                try { wait(500); } catch (InterruptedException e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
 
                 setLiftAction(LiftAction.ZERO);
 
-                try { wait(300); } catch (InterruptedException e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
 
                 extension.disable();
             } break;
@@ -186,35 +184,21 @@ public class Outtake implements Enums.Outtake {
             case HANG: {
                 setLiftAction(LiftAction.FULL);
 
-                try { wait(500); } catch (InterruptedException e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
 
                 setArmAction(ArmAction.PRE_SCORE);
             } break;
 
             case TRANSFER: {
-                if (lastAction == OuttakeAction.COLLECT) {
-                    setLiftAction(LiftAction.COLLECT);
+                setArmAction(ArmAction.TRANSFER);
 
-                    try { wait(500); } catch (InterruptedException e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
 
-                    setArmAction(ArmAction.TRANSFER);
-                    setLiftAction(LiftAction.ZERO);
+                setLiftAction(LiftAction.ZERO);
 
-                    try { wait(300); } catch (InterruptedException e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
 
-                    extension.disable();
-
-                } else {
-                    setArmAction(ArmAction.TRANSFER);
-
-                    try { wait(500); } catch (InterruptedException e) {}
-
-                    setLiftAction(LiftAction.ZERO);
-
-                    try { wait(300); } catch (InterruptedException e) {}
-
-                    extension.disable();
-                }
+                extension.disable();
             } break;
 
 
@@ -256,36 +240,44 @@ public class Outtake implements Enums.Outtake {
      * @param target is the input scalar of the straight line between
      *               the claw and the sample. Measured in mm (distance)
      */
-    private void inverseKinematics(double target) {
+    public void inverseKinematics(double target) {
         target = Math.max(inverseMIN, Math.min(inverseMAX, target));
 
-        double dx = target - kinematicPose;
-        double servo_2_deg = 355 * hardware.servos.get(OuttakeLeftPivot).getPosition() * j1GearRatio;
-        double alpha = Math.toRadians(j1_start - 180 + servo_2_deg);
-        double r = 200 + 120 * hardware.servos.get(OuttakeExtension).getPosition() / maxExtension;
+        double alpha = Math.toRadians(117);
+        double r = 214;
 
-        double
-                a = 1,
+        double  a = 1,
                 b = 2 * r,
-                c = 2 * r * dx + Math.cos(alpha) - dx * dx;
+                c = 2 * r * target * Math.cos(alpha) - target * target;
         double delta = b * b - 4 * a * c;
+
+        hardware.telemetry.addData("delta: ", delta);
+
         double dl = (-b + Math.sqrt(delta)) / 2;
 
-        double R = r + dl;
+        hardware.telemetry.addData("dl: ", dl);
 
-        double dtheta1 = Math.acos((dx * dx - r * r - R * R) / (-2 * r * R));
-        double new_alpha = Math.toDegrees(dtheta1 + alpha);
+        double R = dl + r;
 
-        double theta1 = (new_alpha + 180 - j1_start) / (355 * j1GearRatio);
-        double theta2 = (R - 200) * maxExtension / 120;
-        double theta3 = hardware.servos.get(OuttakeWrist).getPosition() + dtheta1 / 355;
+        double dtheta1 = Math.PI - Math.acos((target * target - r * r - R * R) / (2 * r * R));
+
+        hardware.telemetry.addData("dtheta1", dtheta1);
+
+        double theta1 = Math.toDegrees(dtheta1) * armScore / 153;
+        double theta2 = extendoTransfer + dl * (extendoPreScore - extendoTransfer) / 106;
+        double theta3 = wristTransfer - j1GearRatio * theta1;
 
         kinematicPose = target;
 
-        hardware.servos.get(OuttakeLeftPivot).setPosition(theta1);
-        hardware.servos.get(OuttakeRightPivot).setPosition(theta1);
-        hardware.servos.get(OuttakeExtension).setPosition(theta2);
-        hardware.servos.get(OuttakeWrist).setPosition(theta3);
+        hardware.telemetry.addData("Joint 1 Position: ", theta1);
+        hardware.telemetry.addData("Joint 2 Position: ", theta2);
+        hardware.telemetry.addData("Joint 3 Position: ", theta3);
+        hardware.telemetry.update();
+
+        //hardware.servos.get(OuttakeLeftPivot).setPosition(theta1);
+        //hardware.servos.get(OuttakeRightPivot).setPosition(theta1);
+        //hardware.servos.get(OuttakeExtension).setPosition(theta2);
+        //hardware.servos.get(OuttakeWrist).setPosition(theta3);
     }
 
 

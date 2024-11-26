@@ -10,18 +10,22 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Rev
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RevTouchNameList;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.ServoNamesList;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevTouchSensor;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Util.MotionHardware.Init;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
@@ -32,7 +36,7 @@ import java.util.Map;
 
 public class Hardware {
     private static Hardware instance;
-
+    public MultipleTelemetry telemetry;
 
 
     public Map<String, Servo> servos = new HashMap<>();
@@ -43,27 +47,31 @@ public class Hardware {
 
 
 
-    public Map<String, RevColorSensorV3> color = new HashMap<>();
+    public Map<String, ColorRangeSensor> color = new HashMap<>();
     public Map<String, Rev2mDistanceSensor> distance = new HashMap<>();
     public Map<String, RevTouchSensor> touch = new HashMap<>();
 
 
 
     public Map<String, DcMotorEx> motors = new HashMap<>();
-    private Map<String, Encoder> encoders = new HashMap<>();
+    public Map<String, Encoder> encoders = new HashMap<>();
 
 
 
-    public static Hardware getInstance(HardwareMap hardwareMap) {
+
+    public static Hardware getInstance(HardwareMap hardwareMap, Telemetry telemetry) {
         if (instance == null) {
-            instance = new Hardware(hardwareMap);
+            instance = new Hardware(hardwareMap, telemetry);
         }
         return instance;
     }
 
 
 
-    public Hardware(HardwareMap hardwareMap) {
+
+    public Hardware(HardwareMap hardwareMap, Telemetry telemetry) {
+        this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
         // add all servos into a list
         for (String servoName : ServoNamesList)
             if (!servoName.isEmpty())

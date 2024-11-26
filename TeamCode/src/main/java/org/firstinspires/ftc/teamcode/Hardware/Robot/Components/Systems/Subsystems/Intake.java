@@ -48,7 +48,7 @@ public class Intake implements Enums {
 
 
     public Intake(LinearOpMode opMode) {
-        hardware = Hardware.getInstance(opMode.hardwareMap);
+        hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
 
         this.opMode = opMode;
         extension = new OneMotorLift(opMode, IntakeMotor);

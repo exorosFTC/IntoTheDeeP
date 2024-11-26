@@ -21,7 +21,7 @@ public class SystemConstants {
     public static final double v4bSafeDropdown = 60; //ticks
 
     public static final double inOuttakeThreshold = 15; //mm
-
+    public static final double outtakeTicksPerDegree = 537.7 / 360;
     public static final ColorEx red = new ColorEx(240, 180, 130);
     public static final ColorEx blue = new ColorEx(96, 168, 250);
     public static final ColorEx yellow = new ColorEx(0, 0, 0);

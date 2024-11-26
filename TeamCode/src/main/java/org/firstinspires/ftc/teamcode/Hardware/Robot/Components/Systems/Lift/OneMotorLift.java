@@ -27,7 +27,7 @@ public class OneMotorLift {
 
 
     public OneMotorLift(LinearOpMode opMode, String motor) {
-        this.hardware = Hardware.getInstance(opMode.hardwareMap);
+        this.hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
         this.opMode = opMode;
 
         this.motor = motor;
