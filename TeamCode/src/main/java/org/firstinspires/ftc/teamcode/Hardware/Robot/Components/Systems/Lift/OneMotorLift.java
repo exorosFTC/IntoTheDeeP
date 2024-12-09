@@ -78,12 +78,17 @@ public class OneMotorLift {
         hardware.motors.get(motor).setPower(1);
     }
 
-    // input [-1, 1] ---- joystick input
     public void extend(double power) {
+        extend(power, false);
+    }
+
+    // input [-1, 1] ---- joystick input
+    public void extend(double power, boolean noLimit) {
         int pastPosition = hardware.motors.get(motor).getCurrentPosition();
         int position = pastPosition + (int) (this.diff * manualLiftCoefficient * power);
 
-        position = Math.min(MAX, Math.max(MIN, position));
+        if (!noLimit) // the MIN limit is set by the touch sensor
+            position = Math.min(MAX, position);
 
         hardware.motors.get(motor).setTargetPosition(position);
         hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -96,11 +101,17 @@ public class OneMotorLift {
 
     public void disable() { hardware.motors.get(motor).setMotorDisable(); }
 
-    public void reset() {
+    public void autoReset() {
         while (opMode.opModeIsActive() && !constrained())
             extend(-1);
+        extend(0);
 
+        resetEncoders();
+    }
+
+    public void resetEncoders() {
         hardware.motors.get(motor).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public boolean constrained() {

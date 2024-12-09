@@ -1,8 +1,9 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot;
 
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastConstrainScalar;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowConstrainScalar;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastDrive;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.driveSensitivity;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingButtonSensitivity;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingDriveSensitivity;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingVelocityToggle;
@@ -61,7 +62,7 @@ public class Machine {
     private AprilTagCamera aprilTagCamera;
 
     private LinearOpMode opMode;
-    private Telemetry telemetry;
+    private Telemetry telemetry = null;
 
     public Localizer localizer;
     public GenericFollower follower;
@@ -112,8 +113,8 @@ public class Machine {
         drive = new Drivetrain(opMode);
         system = new ScorringSystem(opMode);
 
-        telemetry = (data.telemetryType == Enums.Telemetry.REGULAR) ? opMode.telemetry :
-                new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        this.telemetry = (data.telemetryType == Enums.Telemetry.REGULAR) ? opMode.telemetry :
+                new MultipleTelemetry(hardware.telemetry, FtcDashboard.getInstance().getTelemetry());
 
         g1 = add_g1 ? new GamepadEx(opMode.gamepad1) : null;
         g2 = add_g2 ? new GamepadEx(opMode.gamepad2) : null;
@@ -156,16 +157,16 @@ public class Machine {
                     lastTriggerValue = isGamepadTriggerPressed.get();
 
                 }
-                speed = isFast ? fastConstrainScalar : slowConstrainScalar;
+                speed = isFast ? fastDrive : slowDrive;
 
             }
             else {
-                speed = fastConstrainScalar;
+                speed = fastDrive;
 
                 if (usingButtonSensitivity && g1.isDown(data.sensitivityButton))
-                    speed = slowConstrainScalar;
+                    speed = slowDrive;
                 else if (!usingButtonSensitivity && g1.getTrigger(data.sensitivityTrigger) > 0.01)
-                    speed = slowConstrainScalar;
+                    speed = slowDrive;
             }
         }
     }
@@ -176,13 +177,21 @@ public class Machine {
     }
 
 
+    public void updateDrive() { updateDrive(false); }
 
-    public void updateDrive() {
-        drive.update(new Pose(
-                -g1.getLeftY(),     // forwards
-                g1.getLeftX(),      // sideways
-                g1.getRightX()      // turning
-        ));
+    public void updateDrive(boolean exponential) {
+        if (exponential)
+            drive.update(new Pose(
+                    exp(-g1.getLeftY()) * driveSensitivity,            // forwards
+                    exp(g1.getLeftX()) * driveSensitivity,             // sideways
+                    exp(-g1.getRightX()) * driveSensitivity    // turning
+            ));
+        else
+            drive.update(new Pose(
+                -g1.getLeftY() * driveSensitivity,     // forwards
+                g1.getLeftX() * driveSensitivity,      // sideways
+                -g1.getRightX() * driveSensitivity     // turning
+            ));
     }
 
     public void updateDrive(double x, double y, double head) {
@@ -193,8 +202,13 @@ public class Machine {
         if (data.opModeType == Enums.OpMode.TELE_OP) {
             updateGamepad();
             updateDriveSensitivity();
+            system.update();
         }
-        system.update();
+
+    }
+
+    public double exp(double x) {
+        return x * x * x;
     }
 
 
@@ -261,6 +275,17 @@ public class Machine {
 
 
 
-    public void setAccess(Enums.Rumbles rumble) {
+    public void setAccess(Enums.Access access) {
+        switch (access) {
+            case INTAKE: {
+                opMode.gamepad2.rumble(0, 1, 500);
+                opMode.gamepad2.setLedColor(0.96, 0.54,  0.09, 120000);
+            } break;
+
+            case OUTTAKE: {
+                opMode.gamepad2.rumble(1, 0, 500);
+                opMode.gamepad2.setLedColor(0.5, 0,  0.5, 120000);
+            } break;
+        }
     }
 }

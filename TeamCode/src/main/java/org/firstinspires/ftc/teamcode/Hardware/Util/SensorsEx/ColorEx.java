@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx;
 
 public class ColorEx {
-    private double accuracyTreshold = 10;
+    private double accuracyTreshold = 20;
     private double r, g, b;
 
     public ColorEx(double r, double g, double b, double accuracyThreshold) {

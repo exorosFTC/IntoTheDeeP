@@ -54,7 +54,7 @@ public class HardwareNames {
     public static final String OuttakeClaw = "outtakeClaw";
 
     public static List<String> ServoNamesList = Arrays.asList(
-            IntakeV4B, IntakeClaw,
+            IntakeV4B, IntakeClaw, IntakeRotation,
             OuttakeLeftPivot, OuttakeRightPivot, OuttakeExtension, OuttakeWrist, OuttakeClaw
     );
 
@@ -68,16 +68,19 @@ public class HardwareNames {
 
 
 
+    public static final String OuttakeDistance = "outtakeDistanceSensor";
 
-    public static List<String> RevDistanceNameList = Arrays.asList();
+    public static List<String> RevDistanceNameList = Arrays.asList(
+            OuttakeDistance
+    );
 
 
 
-    public static final String OuttakeColor = "outtakeColorSensor";
+
     public static final String IntakeColor = "intakeColorSensor";
 
     public static List<String> RevColorNameList = Arrays.asList(
-            IntakeColor, OuttakeColor
+            IntakeColor
     );
 
 

@@ -7,9 +7,11 @@ public class MecanumConstants {
     public static boolean usingAcceleration = true;
     public static boolean usingExponentialInput = true;
 
-    public static final double fastConstrainScalar = 1;
-    public static final double slowConstrainScalar = 0.4;
-    public static final double accelerationScalar = 0.01;
+    public static final double fastDrive = 1;
+    public static final double slowDrive = 0.3;
+    public static final double accelerationScalar = 0.03;
+
+    public static double driveSensitivity = fastDrive;
 
 
     // ODOMETRY CONSTANTS
@@ -17,7 +19,7 @@ public class MecanumConstants {
     public static final double ODOMETRY_WHEEL_RADIUS_CM = 4;
 
     public static final double TRACK_LENGTH = 29;
-    public static final double TRACK_WIDTH = 10; //23 og, but it's turning too fast
+    public static final double TRACK_WIDTH = 5; //23 og, but it's turning too fast
 
     public static final double ODOMETRY_LEFT_X_OFFSET_CM = 0;
     public static final double ODOMETRY_RIGHT_X_OFFSET_CM = 0;

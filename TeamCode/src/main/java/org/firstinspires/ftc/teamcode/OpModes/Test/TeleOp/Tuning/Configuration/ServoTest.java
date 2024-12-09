@@ -31,7 +31,7 @@ private static int index = 0;
 
     private double position = 0;
     private double increment = 0.05;
-    private final double incrementSmall = 0.5;
+    private final double incrementSmall = 0.01;
 
     @Override
     public void runOpMode() throws InterruptedException {

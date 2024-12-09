@@ -1,31 +1,30 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.inOuttakeThreshold;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeMAX;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOuttakeMotor;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeClaw;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeColor;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeDistance;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeExtension;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeLeftPivot;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeRightPivot;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeWrist;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightOuttakeMotor;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.cameraConfigurationName;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift.TwoMotorLift;
 
-public class Outtake implements Enums.Outtake {
+public class Outtake implements Enums.OuttakeEnums {
     private static Hardware hardware;
     private static LinearOpMode opMode;
 
-    private static OuttakeAction lastAction;
-    private static ArmAction lastArmAction;
+    private static OuttakeAction previousAction, currentAction;
+    private static ArmAction previousArmAction;
     public final TwoMotorLift extension;
 
     private static final double
@@ -34,37 +33,33 @@ public class Outtake implements Enums.Outtake {
 
     private static final double
             armTransfer = 0,
-            armScore = 0.75;
+            armScore = 0.77;
 
-    private static final double // [0.05, 0.50] --- retracted / full extension
-            extendoTransfer = 0.5,
+    private static final double
+            extendoTransfer = 0.4,
             extendoPreScore = 0.82,
-            extendoScore = 0.47;
+            extendoScore = 0.4;
 
 
     private static final double
-            wristTransfer = 0.7,
-            wristScore = 0.55;
+            wristTransfer = 0.72,
+            wristScore = 0.40;
 
     private static final double // mm
             inverseMIN = 0,
-            inverseMAX = 60;
+            inverseMAX = 160; // 160 mm is the mechanical limit (of the extendo)
 
 
 
     private double kinematicPose = 0;
-    private final double j1GearRatio = 24 / 40;
-    private final double maxExtension = 0.5;
+    private final double j1GearRatio = 24.0 / 40;
 
-    /** assumes that pose 0 (from the interval [0, 1]
-     *      is this value (in DEGREES) irl*/
-    private final double j1_start = 298;
-    private final double j3_start = 108;
+    /**Inverse Kinematics constants*/
+    private final double alpha = Math.toRadians(117);
+    private final double r = 214;
 
-    /** linear extension starting length (in MILIMETERS)
-     *
-     *  length of the rail + 14 mm of extension*/
-    private final double j2_start = 200 + 14;
+    private final double  a = 1,
+                          b = 2 * r;
 
 
 
@@ -81,7 +76,7 @@ public class Outtake implements Enums.Outtake {
 
         extension.addLimit(outtakeMAX)
                 .addCurrentAlert(1)
-                .addGearRatios(10 / 8, 8 / 8)
+                .addGearRatios(10.0 / 8, 8.0 / 8)
                 .reverseRight();
     }
 
@@ -104,55 +99,51 @@ public class Outtake implements Enums.Outtake {
                     hardware.servos.get(OuttakeLeftPivot).setPosition(armScore);
                     hardware.servos.get(OuttakeRightPivot).setPosition(armScore);
                 }
+                hardware.servos.get(OuttakeExtension).setPosition(extendoTransfer);
 
                 if (hardware.servos.get(OuttakeClaw).getPosition() != clawClosed)
                     hardware.servos.get(OuttakeClaw).setPosition(clawClosed);
                 hardware.servos.get(OuttakeWrist).setPosition(wristScore);
 
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
+                try { Thread.sleep(400); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeExtension).setPosition(extendoPreScore);
 
             } break;
 
-            case SCORE: {
-                if (lastArmAction != ArmAction.PRE_SCORE)
-                    break;
-
+            case SCORE_SPECIMENS: {
                 hardware.servos.get(OuttakeExtension).setPosition(extendoScore);
 
                 try { Thread.sleep(100); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeClaw).setPosition(clawOpen);
 
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
-
-                setArmAction(ArmAction.PRE_TRANSFER);
             } break;
 
-            case PRE_TRANSFER: {
-                hardware.servos.get(OuttakeWrist).setPosition(wristTransfer);
-
-                hardware.servos.get(OuttakeExtension).setPosition(extendoTransfer);
-
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
-
-                hardware.servos.get(OuttakeLeftPivot).setPosition(armTransfer);
-                hardware.servos.get(OuttakeRightPivot).setPosition(armTransfer);
-
+            case SCORE_SAMPLES: {
+                hardware.servos.get(OuttakeWrist).setPosition(wristScore + 0.7);
 
                 try { Thread.sleep(100); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeClaw).setPosition(clawOpen);
-                kinematicPose = 0;
+
+            } break;
+
+            case PRE_TRANSFER: {
+                hardware.servos.get(OuttakeLeftPivot).setPosition(armTransfer);
+                hardware.servos.get(OuttakeRightPivot).setPosition(armTransfer);
+
+                hardware.servos.get(OuttakeExtension).setPosition(extendoTransfer);
+                hardware.servos.get(OuttakeWrist).setPosition(wristTransfer);
+
+                hardware.servos.get(OuttakeClaw).setPosition(clawOpen);
             } break;
 
             case TRANSFER: {
-                if (lastArmAction != ArmAction.PRE_TRANSFER)
-                    break;
+                double distance = hardware.distance.get(OuttakeDistance).getDistance(DistanceUnit.MM);
+                inverseKinematics(distance);
 
-                double distance = hardware.color.get(OuttakeColor).getDistance(DistanceUnit.MM);
-                inverseKinematics(kinematicPose + distance);
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeClaw).setPosition(clawClosed);
 
@@ -160,7 +151,7 @@ public class Outtake implements Enums.Outtake {
 
         }
 
-        lastArmAction = action;
+        previousArmAction = action;
     }
 
 
@@ -169,65 +160,54 @@ public class Outtake implements Enums.Outtake {
 
     public void setAction(OuttakeAction action) {
         switch (action) {
-            case INIT: {
-                setArmAction(ArmAction.PRE_TRANSFER);
-
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
-
-                setLiftAction(LiftAction.ZERO);
-
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
-
-                extension.disable();
-            } break;
 
             case HANG: {
                 setLiftAction(LiftAction.FULL);
-
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
-
                 setArmAction(ArmAction.PRE_SCORE);
+            } break;
+
+            case PRE_TRANSFER: {
+                setLiftAction(LiftAction.TRANSFER);
+                setArmAction(ArmAction.PRE_TRANSFER);
             } break;
 
             case TRANSFER: {
                 setArmAction(ArmAction.TRANSFER);
 
                 try { Thread.sleep(100); } catch (InterruptedException e) {}
-
-                setLiftAction(LiftAction.ZERO);
-
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
-
                 extension.disable();
             } break;
 
-
-            case SCORE_LOW_RUNG: {
-                setArmAction(ArmAction.SCORE);
-                setLiftAction(LiftAction.LOW_RUNG);
+            case SCORE: {
+                setArmAction(SystemConstants.outtakeScore);
             } break;
 
+            case PRE_SCORE: {
+                switch (SystemConstants.outtakeScore) {
+                    case SCORE_SAMPLES: { action = OuttakeAction.SCORE_HIGH_BASKET; } break;
+                    case SCORE_SPECIMENS: { action = OuttakeAction.SCORE_HIGH_RUNG; } break;
+                }
+            } ;
+
+
             case SCORE_HIGH_RUNG: {
-                setArmAction(ArmAction.SCORE);
+                setArmAction(ArmAction.PRE_SCORE);
                 setLiftAction(LiftAction.HIGH_RUNG);
             } break;
 
-            case SCORE_LOW_BASKET: {
-                setArmAction(ArmAction.SCORE);
-                setLiftAction(LiftAction.LOW_BASKET);
-            } break;
-
             case SCORE_HIGH_BASKET: {
-                setArmAction(ArmAction.SCORE);
+                setArmAction(ArmAction.PRE_SCORE);
                 setLiftAction(LiftAction.HIGH_BASKET);
-            } break;
+            }
 
         }
 
-        lastAction = action;
+        previousAction = currentAction;
+        currentAction = action;
     }
 
 
+    public void extend(double power, boolean noLimit) { extension.extend(power, noLimit);}
 
     public void extend(double power) { extension.extend(power); }
 
@@ -243,43 +223,41 @@ public class Outtake implements Enums.Outtake {
     public void inverseKinematics(double target) {
         target = Math.max(inverseMIN, Math.min(inverseMAX, target));
 
-        double alpha = Math.toRadians(117);
-        double r = 214;
-
-        double  a = 1,
-                b = 2 * r,
-                c = 2 * r * target * Math.cos(alpha) - target * target;
+        double c = 2 * r * target * Math.cos(alpha) - target * target;
         double delta = b * b - 4 * a * c;
 
-        hardware.telemetry.addData("delta: ", delta);
-
         double dl = (-b + Math.sqrt(delta)) / 2;
-
-        hardware.telemetry.addData("dl: ", dl);
-
         double R = dl + r;
 
-        double dtheta1 = Math.PI - Math.acos((target * target - r * r - R * R) / (2 * r * R));
-
-        hardware.telemetry.addData("dtheta1", dtheta1);
+        double dtheta1 = Math.acos((target * target - r * r - R * R) / (-2 * r * R));
 
         double theta1 = Math.toDegrees(dtheta1) * armScore / 153;
         double theta2 = extendoTransfer + dl * (extendoPreScore - extendoTransfer) / 106;
         double theta3 = wristTransfer - j1GearRatio * theta1;
 
+        moveKinematics(theta1, theta2, theta3);
         kinematicPose = target;
+    }
 
-        hardware.telemetry.addData("Joint 1 Position: ", theta1);
-        hardware.telemetry.addData("Joint 2 Position: ", theta2);
-        hardware.telemetry.addData("Joint 3 Position: ", theta3);
-        hardware.telemetry.update();
+    private void moveKinematics(double theta1, double theta2, double theta3) {
+        hardware.servos.get(OuttakeLeftPivot).setPosition(theta1);
+        hardware.servos.get(OuttakeRightPivot).setPosition(theta1);
 
-        //hardware.servos.get(OuttakeLeftPivot).setPosition(theta1);
-        //hardware.servos.get(OuttakeRightPivot).setPosition(theta1);
-        //hardware.servos.get(OuttakeExtension).setPosition(theta2);
-        //hardware.servos.get(OuttakeWrist).setPosition(theta3);
+        hardware.servos.get(OuttakeExtension).setPosition(Math.max(theta2 - 0.09, extendoTransfer)); //inconsistency in arm linearity
+        hardware.servos.get(OuttakeWrist).setPosition(theta3);
     }
 
 
-    public OuttakeAction getAction() { return lastAction; }
+
+    public OuttakeAction getAction() { return currentAction; }
+
+    public OuttakeAction getPreviousAction() { return previousAction; }
+
+    public boolean hasJustChangedTo(OuttakeAction action) { return action == currentAction && action != previousAction; }
+
+
+    public void update() { extension.update(); }
+
+
+    public double getKinematicPose() { return kinematicPose; }
 }

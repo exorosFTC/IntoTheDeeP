@@ -21,7 +21,7 @@ import java.util.List;
 @TeleOp(name = "ConfigureSensor", group = "tuning")
 public class SensorTest extends LinearOpMode {
     private ColorRangeSensor sensor;
-    private int index = 1;
+    private int index = 0;
     private Telemetry dashboardTelemetry;
     @Override
     public void runOpMode() throws InterruptedException {

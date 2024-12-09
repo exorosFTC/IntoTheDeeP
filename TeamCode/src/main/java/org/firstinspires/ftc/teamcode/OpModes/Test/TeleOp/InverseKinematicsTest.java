@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeColor;
+
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeDistance;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeLeftPivot;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeRightPivot;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeWrist;
@@ -25,33 +26,22 @@ public class InverseKinematicsTest extends LinearOpMode {
         hardware = new Hardware(this.hardwareMap, this.telemetry);
         outtake = new Outtake(this);
 
-        outtake.setArmAction(Enums.Outtake.ArmAction.PRE_TRANSFER);
+        outtake.setArmAction(Outtake.ArmAction.PRE_TRANSFER);
         double position = 0;
 
         waitForStart();
 
         while (opModeIsActive()) {
-            double distance = hardware.color.get(OuttakeColor).getDistance(DistanceUnit.MM);
+            double distance = hardware.distance.get(OuttakeDistance).getDistance(DistanceUnit.MM);
             double error = distance - target_distance;
 
             double pos = -gamepad1.left_stick_y;
 
             if (pos < 0) pos = 0;
 
-            outtake.inverseKinematics(60 * pos);
+            outtake.inverseKinematics(160 * pos);
 
-            /*double joint1 = hardware.servos.get(OuttakeLeftPivot).getPosition();
-            double addition = joint1 * 24 / 40;
-            double joint2 = 0.7 - addition;*/
-
-
-            /*hardware.servos.get(OuttakeWrist).setPosition(joint2);
-            /**if (distance < 60 && Math.abs(error) > 3) {
-                outtake.inverseKinematics(position + error);
-            }*/
-
-            /*hardware.telemetry.addData("joint1", joint1);
-            hardware.telemetry.addData("joint2", joint2);*/
+            hardware.telemetry.addData("Distance: ", distance);
             hardware.telemetry.update();
 
         }

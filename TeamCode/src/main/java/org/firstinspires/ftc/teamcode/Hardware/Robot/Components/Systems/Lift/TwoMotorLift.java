@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.manualLiftCoefficient;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeMAX;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeTicksPerDegree;
 
 import com.arcrobotics.ftclib.controller.PIDController;
@@ -15,6 +16,8 @@ import org.firstinspires.ftc.teamcode.Hardware.Util.MotionHardware.Init;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.crypto.MacSpi;
+
 
 public class TwoMotorLift {
     private static Hardware hardware;
@@ -23,14 +26,16 @@ public class TwoMotorLift {
     public final Map<String, Integer> values = new HashMap<>();
 
     private int MIN = 0, MAX = 0;
+    private int position = 0;
     private double amps = 1.5;
     private int diff;
 
     private double gearRatioLeft = 1.0;
     private double gearRatioRight = 1.0;
 
-    private final double p = 0, d = 0, f = 0;
-    private PIDController controller;
+    private final double p = 0.02, d = 0;
+    private double f = 0;
+    private final PIDController controller;
 
     private final String
         LEFT, RIGHT;
@@ -105,58 +110,30 @@ public class TwoMotorLift {
 
 
 
-    public void setPosition(String key) {
-        int position = Math.min(MAX, Math.max(MIN, values.get(key).intValue()));
-        int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
+    public void setPosition(String key) { position = values.get(key).intValue();}
 
-        double pid = controller.calculate(currentPosition, position);
-        double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
-        double power = pid + ff;
+    public void setPosition(int pos) { position = Math.min(MAX, Math.max(MIN, pos)); }
 
-        if (power > 1)
-            power = 1;
-        if (power < -1)
-            power = -1;
 
-        double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
-        double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;
-
-        hardware.motors.get(LEFT).setPower(leftPower);
-        hardware.motors.get(RIGHT).setPower(rightPower);
+    public void extend(double power) {
+        extend(power, false);
     }
-
-    public void setPosition(int pos) {
-        int position = Math.min(MAX, Math.max(MIN, pos));
-        int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
-
-        double pid = controller.calculate(currentPosition, position);
-        double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
-        double power = pid + ff;
-
-        if (power > 1)
-            power = 1;
-        if (power < -1)
-            power = -1;
-
-        double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
-        double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;
-
-        hardware.motors.get(LEFT).setPower(leftPower);
-        hardware.motors.get(RIGHT).setPower(rightPower);
-    }
-
-
 
     // input [-1, 1] ---- joystick input
-    public void extend(double power) {
-        int pastPosition = hardware.motors.get(LEFT).getCurrentPosition();
-        int position = pastPosition + (int) (this.diff * manualLiftCoefficient * power);
+    public void extend(double power, boolean noLimit) {
+        int newPosition = this.position + (int) (this.diff * manualLiftCoefficient * power);
 
-        setPosition(position);
+        if (!noLimit)
+            position = Math.min(MAX, Math.max(MIN, newPosition));
     }
 
     public int getPosition() {
         return hardware.motors.get(LEFT).getCurrentPosition();
+    }
+
+    public void setControllerPID(double p, double i, double d, double f) {
+        controller.setPID(p, i, d);
+        this.f = f;
     }
 
     public void disable() {
@@ -167,12 +144,32 @@ public class TwoMotorLift {
     public void autoReset() {
         while (opMode.opModeIsActive() && !constrained())
             extend(-1);
+        extend(0);
 
        resetEncoders();
     }
 
     public boolean constrained() {
         return hardware.motors.get(LEFT).isOverCurrent() || hardware.motors.get(RIGHT).isOverCurrent();
+    }
+
+    public void update() {
+        int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
+
+        hardware.telemetry.addData("OuttakePosition: ", currentPosition);
+        hardware.telemetry.addData("TargetPosition: ", position);
+
+        double pid = controller.calculate(currentPosition, position);
+        //double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
+        double power = pid; //+ ff;
+
+        power = Math.max(Math.min(power, 1), -1);
+
+        double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
+        double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;
+
+        hardware.motors.get(LEFT).setPower(leftPower);
+        hardware.motors.get(RIGHT).setPower(rightPower);
     }
 
 

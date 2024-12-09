@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeMAX;
+
 public interface Enums {
 
     enum Hubs{
@@ -23,6 +25,11 @@ public interface Enums {
         AUTONOMUS
     }
 
+    enum Access{
+        INTAKE,
+        OUTTAKE
+    }
+
     enum Telemetry{
         DASHBOARD,
         REGULAR
@@ -34,18 +41,6 @@ public interface Enums {
         NONE
     }
 
-    enum Rumbles{
-        INTAKE,
-        OUTTAKE
-    }
-
-
-
-    enum IntakeAction{
-        COLLECT,
-        PRE_COLECT,
-        TRANSFER,
-    }
 
     enum Color{
         RED,
@@ -74,24 +69,41 @@ public interface Enums {
         }
     }
 
-    interface Outtake {
+    interface IntakeEnums {
+        enum IntakeAction{
+            COLLECT,
+            PRE_COLECT,
+            TRANSFER,
+        }
+
+        enum IntakePosition{
+            ZERO(0),
+            IN_TRANSFER(200);
+
+            public final int ticks;
+
+            IntakePosition(int ticks) { this.ticks = ticks; }
+        }
+    }
+
+    interface OuttakeEnums {
         enum ArmAction{
             PRE_TRANSFER,
             TRANSFER,
             PRE_SCORE,
-            SCORE
+            SCORE_SPECIMENS,
+            SCORE_SAMPLES
         }
 
         enum LiftAction{
             ZERO(0),
-            FULL(0),
+            TRANSFER(40),
+            FULL(outtakeMAX),
 
-            COLLECT(0),
-
-            HIGH_BASKET(0),
-            HIGH_RUNG(0),
-            LOW_BASKET(0),
-            LOW_RUNG(0);
+            HIGH_BASKET(1000),
+            HIGH_RUNG(200),
+            LOW_BASKET(0), // we don't do that here
+            LOW_RUNG(0); // neither this
 
             public final int ticks;
 
@@ -103,10 +115,11 @@ public interface Enums {
         enum OuttakeAction{
             INIT,
             HANG,
+            SCORE,
+            PRE_TRANSFER,
             TRANSFER,
-            COLLECT,
-            DISABLE,
 
+            PRE_SCORE,
             SCORE_HIGH_BASKET,
             SCORE_LOW_BASKET,
             SCORE_LOW_RUNG,
