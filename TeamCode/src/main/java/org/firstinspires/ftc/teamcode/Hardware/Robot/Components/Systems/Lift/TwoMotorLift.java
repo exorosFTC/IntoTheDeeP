@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationLiftExtended;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationLiftRetracted;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationScalar;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.manualLiftCoefficient;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeMAX;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeTicksPerDegree;
@@ -10,7 +13,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.Hardware.Util.MotionHardware.Init;
 
 import java.util.HashMap;
@@ -33,7 +38,7 @@ public class TwoMotorLift {
     private double gearRatioLeft = 1.0;
     private double gearRatioRight = 1.0;
 
-    private final double p = 0.02, d = 0;
+    private static double p = 0, d = 0;
     private double f = 0;
     private final PIDController controller;
 
@@ -43,7 +48,7 @@ public class TwoMotorLift {
 
 
     public TwoMotorLift(LinearOpMode opMode, String left, String right) {
-        this.hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
+        this.hardware = Hardware.getInstance(opMode);
         this.opMode = opMode;
 
         controller = new PIDController(p, 0, d);
@@ -53,7 +58,6 @@ public class TwoMotorLift {
 
         resetEncoders();
     }
-
 
 
     public TwoMotorLift add(String key, int value) {
@@ -99,6 +103,15 @@ public class TwoMotorLift {
 
     public TwoMotorLift reverseRight() {
         hardware.motors.get(RIGHT).setDirection(DcMotorSimple.Direction.REVERSE);
+        return this;
+    }
+
+    public TwoMotorLift setPID(double p, double i, double d) {
+        this.p = p;
+        this.d = d;
+        controller.setPID(p, 0, d);
+        //fuck i
+
         return this;
     }
 
@@ -156,14 +169,21 @@ public class TwoMotorLift {
     public void update() {
         int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
 
+        if (currentPosition > Enums.OuttakeEnums.LiftAction.TRANSFER.ticks + 30)
+            accelerationScalar = accelerationLiftExtended;
+        else accelerationScalar = accelerationLiftRetracted;
+
         hardware.telemetry.addData("OuttakePosition: ", currentPosition);
         hardware.telemetry.addData("TargetPosition: ", position);
 
+
         double pid = controller.calculate(currentPosition, position);
-        //double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
-        double power = pid; //+ ff;
+        double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
+        double power = pid + ff;
 
         power = Math.max(Math.min(power, 1), -1);
+
+        hardware.telemetry.addData("power: ", power);
 
         double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
         double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;

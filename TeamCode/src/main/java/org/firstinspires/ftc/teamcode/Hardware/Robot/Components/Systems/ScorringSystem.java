@@ -1,10 +1,7 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems;
 
-import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems.Intake;
@@ -17,7 +14,7 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
     public Outtake outtake;
 
     public ScorringSystem(LinearOpMode opMode) {
-        hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
+        hardware = Hardware.getInstance(opMode);
 
         intake = new Intake(opMode);
         outtake = new Outtake(opMode);
@@ -28,14 +25,14 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
     public void transfer() {
             outtake.setAction(OuttakeAction.TRANSFER);
 
-            try { Thread.sleep(100); } catch (InterruptedException e) {}
+            try { Thread.sleep(150); } catch (InterruptedException e) {}
 
             intake.openClaw(true);
             intake.extendPosition(IntakePosition.IN_TRANSFER);
 
             try { Thread.sleep(100); } catch (InterruptedException e) {}
 
-            intake.setAction(IntakeAction.PRE_COLECT);
+            intake.setAction(IntakeAction.PRE_COLLECT);
 
             try { Thread.sleep(150); } catch (InterruptedException e) {}
 
@@ -46,9 +43,9 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
     }
 
     public void update() {
-        if (intake.hasJustChangedTo(IntakeAction.PRE_COLECT))
+        if (intake.hasJustChangedTo(IntakeAction.PRE_COLLECT))
             outtake.setAction(Outtake.OuttakeAction.PRE_TRANSFER);
-
+        outtake.update();
     }
 
     public void reset() {

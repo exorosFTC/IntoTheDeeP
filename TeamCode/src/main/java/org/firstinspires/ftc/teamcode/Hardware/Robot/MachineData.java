@@ -9,7 +9,6 @@ public class MachineData implements Enums, Enums.Mecanum {
 
     public Localizers localizer;
     public OpMode opModeType;
-    public Telemetry telemetryType;
     public MotionPackage motionPackage;
 
     public GamepadKeys.Button sensitivityButton = null;
@@ -29,11 +28,6 @@ public class MachineData implements Enums, Enums.Mecanum {
 
     public MachineData add(MotionPackage motionPackage) {
         this.motionPackage = motionPackage;
-        return this;
-    }
-
-    public MachineData add(Telemetry telemetryType) {
-        this.telemetryType = telemetryType;
         return this;
     }
 

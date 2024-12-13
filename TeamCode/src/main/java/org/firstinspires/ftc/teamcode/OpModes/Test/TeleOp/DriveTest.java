@@ -22,7 +22,7 @@ public class DriveTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         drive = new Drivetrain(this);
-        hardware = new Hardware(this.hardwareMap, this.telemetry);
+        hardware = new Hardware(this);
 
         g1 = new GamepadEx(gamepad1);
 
@@ -30,7 +30,7 @@ public class DriveTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             drive.update(new Pose(
-                    -g1.getLeftY(),
+                    g1.getLeftY(),
                     g1.getLeftX(),
                     -g1.getRightX() * 0.7
             ));

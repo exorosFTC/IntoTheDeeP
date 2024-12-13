@@ -23,7 +23,7 @@ public class InverseKinematicsTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        hardware = new Hardware(this.hardwareMap, this.telemetry);
+        hardware = new Hardware(this);
         outtake = new Outtake(this);
 
         outtake.setArmAction(Outtake.ArmAction.PRE_TRANSFER);

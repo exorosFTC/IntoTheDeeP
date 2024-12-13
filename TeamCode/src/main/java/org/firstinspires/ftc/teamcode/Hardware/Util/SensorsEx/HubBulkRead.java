@@ -4,7 +4,6 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.LynxModuleUtil;
 
 import java.util.List;
 
@@ -37,7 +36,7 @@ public class HubBulkRead {
         LynxModuleUtil.ensureMinimumFirmwareVersion(hardwareMap);
         allHubs = hardwareMap.getAll(LynxModule.class);
 
-        init(currentCachingMode);
+        setMode(currentCachingMode);
 
         CONTROL_HUB = allHubs.get(0);
         if (allHubs.size() > 1) { EXPANSION_HUB = allHubs.get(1); }
@@ -51,7 +50,7 @@ public class HubBulkRead {
         construct(hardwareMap);
     }
 
-    private void init(LynxModule.BulkCachingMode cachingMode) {
+    public void setMode(LynxModule.BulkCachingMode cachingMode) {
         for(LynxModule hub : allHubs) {
             hub.setBulkCachingMode(cachingMode);
         }

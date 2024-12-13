@@ -1,29 +1,39 @@
 package org.firstinspires.ftc.teamcode.OpModes.Main.TeleOp;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.driveSensitivity;
+
+import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Machine;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.MachineData;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
 import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
+@Config
 @TeleOp(name = "🍓", group = "main")
 public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.OuttakeEnums {
     private Machine robot;
-    private Thread drivetrainThread, outtakeExtensionThread;
 
     private Enums.Access access = Enums.Access.INTAKE;
+    private Drivetrain drive;
+    private GamepadEx g1;
 
+    public static double p, d, f;
 
     @Override
     protected void Init() {
+        g1 = new GamepadEx(gamepad1);
+        drive = new Drivetrain(this);
         robot = new Machine()
                 .addData(new MachineData()
-                        .add(Enums.Telemetry.REGULAR)
                         .add(Enums.OpMode.TELE_OP)
                         .getLoopTime(true)
                         .setUsingOpenCv(false)
@@ -37,24 +47,13 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
 
     @Override
     protected void WhenStarted() {
-        drivetrainThread.start();
-        outtakeExtensionThread.start();
-
+        robot.drivetrainThread.start();
         robot.system.outtake.setAction(OuttakeAction.PRE_TRANSFER);
     }
 
     @Override
     protected void InitializeThreads() {
-        drivetrainThread = new Thread(() -> {
-            while (opModeIsActive()) robot.updateDrive();
-        });
 
-        outtakeExtensionThread = new Thread(() -> {
-            while (opModeIsActive()) {
-                robot.system.outtake.update();
-                robot.bulk.clearCache(Enums.Hubs.ALL);
-            }
-        });
     }
 
     @Override
@@ -73,13 +72,16 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
         switch (access) {
             case INTAKE: {
                 /** B for COLLECTING from the ground*/
-                if (robot.g2.wasJustPressed(GamepadKeys.Button.B))
+                if (robot.g2.wasJustPressed(GamepadKeys.Button.B)) {
+                    robot.bulk = new HubBulkRead(this.hardwareMap, LynxModule.BulkCachingMode.AUTO);
                     robot.system.intake.setAction(IntakeAction.COLLECT);
+                    robot.bulk = new HubBulkRead(this.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
+                }
 
                 /** A for TRANSFERRING the sample/specimen to the outtake*/
                 if (robot.g2.wasJustPressed(GamepadKeys.Button.A)) {
 
-                    if (robot.system.intake.getAction() != IntakeAction.PRE_COLECT && robot.system.intake.hasGameElement()) {
+                    if (robot.system.intake.getAction() != IntakeAction.PRE_COLLECT && robot.system.intake.hasGameElement()) {
                         robot.system.transfer();
 
                         access = Enums.Access.OUTTAKE;
@@ -95,28 +97,31 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
                 robot.system.intake.rotate(
                         robot.g2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER),
                         robot.g2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER),
-                        0.02);
+                        0.04);
 
                 /** extend the intake*/
-                if (robot.g2.getLeftY() != 0)
-                    robot.system.intake.extend(exp(robot.g2.getLeftY()));
+                robot.system.intake.extend(exp(robot.g2.getLeftY()));
             } break;
 
             case OUTTAKE: {
-                /** set RUNG or BASKET scoring*/
-                if (robot.g2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) != 0)
+                /** DPAD_UP extends the lift into the SAMPLE SCORING position*/
+                if (robot.g2.wasJustPressed(GamepadKeys.Button.DPAD_UP)) {
                     SystemConstants.outtakeScore = ArmAction.SCORE_SAMPLES;
-                else if (robot.g2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) != 0)
-                    SystemConstants.outtakeScore = ArmAction.SCORE_SPECIMENS;
-
-                /** DPAD_UP extends the lift into SCORING position*/
-                if (robot.g2.wasJustPressed(GamepadKeys.Button.DPAD_UP))
                     robot.system.outtake.setAction(OuttakeAction.PRE_SCORE);
                 }
 
+                /** DPAD_LEFT extends the lift into the SPECIMEN SCORING position*/
+                if (robot.g2.wasJustPressed(GamepadKeys.Button.DPAD_LEFT)) {
+                    SystemConstants.outtakeScore = ArmAction.SCORE_SPECIMENS;
+                    robot.system.outtake.setAction(OuttakeAction.PRE_SCORE);
+                }
+
+
                 /** B to actually SCORE*/
                 if (robot.g2.wasJustPressed(GamepadKeys.Button.B)) {
+                    robot.bulk.setMode(LynxModule.BulkCachingMode.AUTO);
                     robot.system.outtake.setAction(OuttakeAction.SCORE);
+                    robot.bulk.setMode(LynxModule.BulkCachingMode.MANUAL);
                 }
 
                 /** A to get back into TRANSFER*/
@@ -127,20 +132,20 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
                     robot.setAccess(Enums.Access.INTAKE);
                 }
 
-                /** X to TOGGLE the claw*/
-                if (robot.g2.wasJustPressed(GamepadKeys.Button.X))
-                    robot.system.outtake.toggleClaw();
-
                 /** extend the outtake*/
-                if (robot.g2.getLeftY() != 0)
-                    robot.system.outtake.extend(exp(robot.g2.getLeftY()));
-            }
+                robot.system.outtake.extend(exp(robot.g2.getLeftY() * 0.2));
+            } break;
+        }
 
         robot.addTelemetry("OuttakeAction: ", robot.system.outtake.getAction());
         robot.addTelemetry("IntakeAction: ", robot.system.intake.getAction());
 
+        robot.addTelemetry("Score: ", SystemConstants.outtakeScore);
+
         robot.addTelemetry("HasGameElement: ", robot.system.intake.hasGameElement());
         robot.addTelemetry("Access: ", access);
+
+        robot.bulk.clearCache(Enums.Hubs.ALL);
 
         robot.updateSystem();
         robot.updateTelemetry();

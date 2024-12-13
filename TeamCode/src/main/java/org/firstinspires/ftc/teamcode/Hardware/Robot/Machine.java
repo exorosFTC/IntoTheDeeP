@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
 public class Machine {
     public Hardware hardware;
     public HubBulkRead bulk;
+    public Thread drivetrainThread;
 
     private VoltageSensor batteryVoltageSensor;
 
@@ -62,7 +63,6 @@ public class Machine {
     private AprilTagCamera aprilTagCamera;
 
     private LinearOpMode opMode;
-    private Telemetry telemetry = null;
 
     public Localizer localizer;
     public GenericFollower follower;
@@ -70,7 +70,6 @@ public class Machine {
     //default data
     private MachineData data = new MachineData()
             .add(Enums.OpMode.TELE_OP)
-            .add(Enums.Telemetry.DASHBOARD)
             .setUsingAprilTag(false)
             .setUsingOpenCv(false);
 
@@ -105,7 +104,7 @@ public class Machine {
 
     public Machine construct(LinearOpMode opMode) {
         this.bulk = new HubBulkRead(opMode.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
-        this.hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
+        this.hardware = Hardware.getInstance(opMode);
         this.opMode = opMode;
 
         batteryVoltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
@@ -113,14 +112,11 @@ public class Machine {
         drive = new Drivetrain(opMode);
         system = new ScorringSystem(opMode);
 
-        this.telemetry = (data.telemetryType == Enums.Telemetry.REGULAR) ? opMode.telemetry :
-                new MultipleTelemetry(hardware.telemetry, FtcDashboard.getInstance().getTelemetry());
-
         g1 = add_g1 ? new GamepadEx(opMode.gamepad1) : null;
         g2 = add_g2 ? new GamepadEx(opMode.gamepad2) : null;
 
-        openCvCamera = usingOpenCvCamera ? new Camera(opMode, telemetry) : null;
-        aprilTagCamera = usingAprilTagCamera ? new AprilTagCamera(opMode, telemetry) : null;
+        openCvCamera = usingOpenCvCamera ? new Camera(opMode, hardware.telemetry) : null;
+        aprilTagCamera = usingAprilTagCamera ? new AprilTagCamera(opMode, hardware.telemetry) : null;
 
         isGamepadTriggerPressed = !usingButtonSensitivity && usingVelocityToggle ?
                 new Trigger(() -> g1.getTrigger(data.sensitivityTrigger) > 0.01) : null;
@@ -137,6 +133,8 @@ public class Machine {
             follower = new GenericFollower(localizer);
         }
 
+        createDrivetrainThread();
+
         return this;
     }
 
@@ -144,6 +142,30 @@ public class Machine {
 
 
 
+    private void createDrivetrainThread() {
+        if (g1 != null)
+            drivetrainThread = new Thread(() -> {
+                while (opMode.opModeIsActive()) {
+                    drive.update(new Pose(
+                            -g1.getLeftY() * 1,     // forwards
+                            g1.getLeftX() * 1,      // sideways
+                            -g1.getRightX() * driveSensitivity      // turning
+                    ));
+                    g1.readButtons();
+                }
+            });
+        else if (g2 != null)
+            drivetrainThread = new Thread(() -> {
+                while (opMode.opModeIsActive()) {
+                    drive.update(new Pose(
+                            -g2.getLeftY() * 1,     // forwards
+                            g2.getLeftX() * 1,      // sideways
+                            -g2.getRightX() * driveSensitivity      // turning
+                    ));
+                    g2.readButtons();
+                }
+            });
+    }
 
     private void updateDriveSensitivity() {
         if (usingDriveSensitivity) {
@@ -182,15 +204,15 @@ public class Machine {
     public void updateDrive(boolean exponential) {
         if (exponential)
             drive.update(new Pose(
-                    exp(-g1.getLeftY()) * driveSensitivity,            // forwards
-                    exp(g1.getLeftX()) * driveSensitivity,             // sideways
-                    exp(-g1.getRightX()) * driveSensitivity    // turning
+                    exp(-g1.getLeftY()) * 1,            // forwards
+                    exp(g1.getLeftX()) * 1,             // sideways
+                    exp(-g1.getRightX()) * driveSensitivity     // turning
             ));
         else
             drive.update(new Pose(
-                -g1.getLeftY() * driveSensitivity,     // forwards
-                g1.getLeftX() * driveSensitivity,      // sideways
-                -g1.getRightX() * driveSensitivity     // turning
+                -g1.getLeftY() * 1,     // forwards
+                g1.getLeftX() * 1,      // sideways
+                -g1.getRightX() * driveSensitivity      // turning
             ));
     }
 
@@ -202,8 +224,8 @@ public class Machine {
         if (data.opModeType == Enums.OpMode.TELE_OP) {
             updateGamepad();
             updateDriveSensitivity();
-            system.update();
         }
+        system.update();
 
     }
 
@@ -246,30 +268,28 @@ public class Machine {
 
 
     public void initComplete() {
-        if (telemetry != null) {
-            telemetry.addLine("INIT COMPLETE! KILL EM' ALL 😈");
-            telemetry.update();
+        if (hardware.telemetry != null) {
+            hardware.telemetry.addLine("INIT COMPLETE! KILL EM' ALL 😈");
+            hardware.telemetry.update();
         }
     }
 
-    public void addTelemetry(String caption, Object value) { if (telemetry != null) telemetry.addData(caption, value); }
+    public void addTelemetry(String caption, Object value) { if (hardware.telemetry != null) hardware.telemetry.addData(caption, value); }
 
-    public void clearTelemetry() { if (telemetry != null) telemetry.clearAll(); }
+    public void clearTelemetry() { if (hardware.telemetry != null) hardware.telemetry.clearAll(); }
 
     public void updateTelemetry() {
-        if (telemetry != null) {
-            if (telemetryAddLoopTime) {
-                getEndingLoopTime();
-                telemetry.addData("Loop Time: ", getLoopFrequency());
-                getStartingLoopTime();
+        if (telemetryAddLoopTime) {
+            getEndingLoopTime();
+            hardware.telemetry.addData("Loop Time: ", getLoopFrequency());
+            getStartingLoopTime();
             }
-            telemetry.update();
-        }
+        hardware.telemetry.update();
     }
 
     public void debuggingTelemetry() {
-        if (telemetry != null) {
-            telemetry.addData("Drive", 0);
+        if (hardware.telemetry != null) {
+            hardware.telemetry.addData("Drive", 0);
         }
     }
 

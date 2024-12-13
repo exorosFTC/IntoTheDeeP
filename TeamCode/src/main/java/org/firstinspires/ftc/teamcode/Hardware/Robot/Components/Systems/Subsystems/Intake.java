@@ -54,7 +54,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
 
     public Intake(LinearOpMode opMode) {
-        hardware = Hardware.getInstance(opMode.hardwareMap, opMode.telemetry);
+        hardware = Hardware.getInstance(opMode);
 
         hardware.servos.get(IntakeRotation).setDirection(Servo.Direction.REVERSE);
 
@@ -86,7 +86,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
             } break;
 
-            case PRE_COLECT: {
+            case PRE_COLLECT: {
                     hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
 
                     if (!hasGameElement())
@@ -122,7 +122,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
                 } else {
                     hardware.servos.get(IntakeClaw).setPosition(clawOpen);
 
-                    setAction(IntakeAction.PRE_COLECT);
+                    setAction(IntakeAction.PRE_COLLECT);
                 }
             } break;
         }
@@ -146,9 +146,9 @@ public class Intake implements Enums, Enums.IntakeEnums {
             extension.resetEncoders();
         }
 
-        if (extension.getPosition() > v4bSafeDropdown && previousAction != IntakeAction.PRE_COLECT) {
+        if (extension.getPosition() > v4bSafeDropdown && previousAction != IntakeAction.PRE_COLLECT) {
             driveSensitivity = slowDrive;
-            setAction(IntakeAction.PRE_COLECT);
+            setAction(IntakeAction.PRE_COLLECT);
         }
         else if (extension.getPosition() < v4bSafeDropdown && previousAction != IntakeAction.TRANSFER) {
             driveSensitivity = fastDrive;

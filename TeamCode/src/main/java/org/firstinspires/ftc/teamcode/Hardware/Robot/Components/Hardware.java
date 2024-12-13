@@ -16,27 +16,35 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.hardware.rev.RevTouchSensor;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorRangeSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.IMU.Threaded_IMU;
 import org.firstinspires.ftc.teamcode.Hardware.Util.MotionHardware.Init;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.Encoder;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Hardware {
     private static Hardware instance;
+    private HardwareMap hardwareMap;
+
     public MultipleTelemetry telemetry;
+    public Threaded_IMU imu;
+
 
 
     public Map<String, Servo> servos = new HashMap<>();
@@ -59,9 +67,9 @@ public class Hardware {
 
 
 
-    public static Hardware getInstance(HardwareMap hardwareMap, Telemetry telemetry) {
+    public static Hardware getInstance(LinearOpMode opMode) {
         if (instance == null) {
-            instance = new Hardware(hardwareMap, telemetry);
+            instance = new Hardware(opMode);
         }
         return instance;
     }
@@ -69,8 +77,10 @@ public class Hardware {
 
 
 
-    public Hardware(HardwareMap hardwareMap, Telemetry telemetry) {
-        this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+    public Hardware(LinearOpMode opMode) {
+        this.telemetry = new MultipleTelemetry(opMode.telemetry, FtcDashboard.getInstance().getTelemetry());
+        this.hardwareMap = opMode.hardwareMap;
+        this.imu = new Threaded_IMU(opMode);
 
         // add all servos into a list
         for (String servoName : ServoNamesList)

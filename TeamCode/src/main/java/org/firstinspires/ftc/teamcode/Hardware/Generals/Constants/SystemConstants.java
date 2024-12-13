@@ -13,7 +13,7 @@ public class SystemConstants {
     public static Enums.OuttakeEnums.ArmAction outtakeScore = Enums.OuttakeEnums.ArmAction.SCORE_SAMPLES;
 
     public static double manualLiftCoefficient = 1;
-    public static final int outtakeMAX = 1600;
+    public static final int outtakeMAX = 1650;
     public static final int extendoMAX = 470;
 
     public static final double rotationMin = 0;

@@ -72,7 +72,7 @@ public interface Enums {
     interface IntakeEnums {
         enum IntakeAction{
             COLLECT,
-            PRE_COLECT,
+            PRE_COLLECT,
             TRANSFER,
         }
 
@@ -100,8 +100,8 @@ public interface Enums {
             TRANSFER(40),
             FULL(outtakeMAX),
 
-            HIGH_BASKET(1000),
-            HIGH_RUNG(200),
+            HIGH_BASKET(960),
+            HIGH_RUNG(250),
             LOW_BASKET(0), // we don't do that here
             LOW_RUNG(0); // neither this
 
