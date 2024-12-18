@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastDrive;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastTurn;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowDrive;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowTurn;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.blue;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.extendoMAX;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.inIntakeThreshold;
@@ -20,6 +22,7 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Int
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -28,6 +31,8 @@ import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift.OneMotorLift;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.ColorEx;
+
+import java.util.concurrent.TimeUnit;
 
 public class Intake implements Enums, Enums.IntakeEnums {
     private static Hardware hardware;
@@ -40,8 +45,8 @@ public class Intake implements Enums, Enums.IntakeEnums {
     private boolean currentTouch = false, lastTouch = false;
 
     private static final double
-            clawOpen = 0.4,
-            clawClosed = 0.77;
+            clawOpen = 0.35,
+            clawClosed = 0.79;
 
     private static final double
             v4bTransfer = 0.19,
@@ -75,6 +80,11 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
     public void setAction(IntakeAction action) {
         switch (action){
+            case DISABLE: {
+                hardware.servos.get(IntakeClaw).getController().close();
+                hardware.servos.get(IntakeRotation).getController().close();
+            } break;
+
             case TRANSFER: {
                 if (previousAction == IntakeAction.TRANSFER)
                     break;
@@ -111,18 +121,30 @@ public class Intake implements Enums, Enums.IntakeEnums {
                 try { Thread.sleep(150); } catch (InterruptedException e) {}
 
                 hardware.servos.get(IntakeClaw).setPosition(clawClosed);
-                try { Thread.sleep(150); } catch (InterruptedException e) {}
+                try { Thread.sleep(160); } catch (InterruptedException e) {}
 
                 if (checkIntakeCatch()) {
-                    setAction(IntakeAction.TRANSFER);
+                    hardware.servos.get(IntakeRotation).setPosition(rotationTransfer);
+                    hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
 
-                    while (!hardware.touch.get(IntakeExtensionTouch).isPressed() && opMode.opModeIsActive())
-                        extension.extend(-1);
-                    extension.extend(0);
+                    try { Thread.sleep(100); } catch (InterruptedException e) {}
+
+                    if (checkIntakeCatch()) {
+                        hardware.servos.get(IntakeV4B).setPosition(v4bTransfer);
+                        ElapsedTime timer = new ElapsedTime();
+
+                        while (!hardware.touch.get(IntakeExtensionTouch).isPressed() && opMode.opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 1300) {
+                            extension.extend(-1);
+                            hardware.bulk.clearCache(Hubs.ALL);
+                        }
+                        extension.extend(0);
+                    } else {
+                        hardware.servos.get(IntakeClaw).setPosition(clawOpen);
+                        hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
+                    }
                 } else {
                     hardware.servos.get(IntakeClaw).setPosition(clawOpen);
-
-                    setAction(IntakeAction.PRE_COLLECT);
+                    hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
                 }
             } break;
         }
@@ -147,11 +169,11 @@ public class Intake implements Enums, Enums.IntakeEnums {
         }
 
         if (extension.getPosition() > v4bSafeDropdown && previousAction != IntakeAction.PRE_COLLECT) {
-            driveSensitivity = slowDrive;
+            driveSensitivity = slowTurn;
             setAction(IntakeAction.PRE_COLLECT);
         }
         else if (extension.getPosition() < v4bSafeDropdown && previousAction != IntakeAction.TRANSFER) {
-            driveSensitivity = fastDrive;
+            driveSensitivity = fastTurn;
             setAction(IntakeAction.TRANSFER);
         }
     }

@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Lift;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationLiftExtended;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationLiftRetracted;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationScalar;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastDrive;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.manualLiftCoefficient;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeMAX;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeTicksPerDegree;
@@ -13,6 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems.Outtake;
@@ -167,30 +170,48 @@ public class TwoMotorLift {
     }
 
     public void update() {
-        int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
+        if (!reached(20)) {
+            int currentPosition = hardware.motors.get(LEFT).getCurrentPosition();
 
-        if (currentPosition > Enums.OuttakeEnums.LiftAction.TRANSFER.ticks + 30)
-            accelerationScalar = accelerationLiftExtended;
-        else accelerationScalar = accelerationLiftRetracted;
+            if (currentPosition > Enums.OuttakeEnums.LiftAction.TRANSFER.ticks + 600) {
+                accelerationScalar = accelerationLiftExtended;
+                MecanumConstants.speed = slowDrive;
+            }
+            else {
+                MecanumConstants.speed = fastDrive;
+                accelerationScalar = accelerationLiftRetracted;
+            }
 
-        hardware.telemetry.addData("OuttakePosition: ", currentPosition);
-        hardware.telemetry.addData("TargetPosition: ", position);
+            //hardware.telemetry.addData("OuttakePosition: ", currentPosition);
+            //hardware.telemetry.addData("TargetPosition: ", position);
 
 
-        double pid = controller.calculate(currentPosition, position);
-        double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
-        double power = pid + ff;
+            double pid = controller.calculate(currentPosition, position);
+            double ff = Math.cos(Math.toRadians(position / outtakeTicksPerDegree)) * f;
+            double power = pid + ff;
 
-        power = Math.max(Math.min(power, 1), -1);
+            power = Math.max(Math.min(power, 1), -1);
 
-        hardware.telemetry.addData("power: ", power);
+            //hardware.telemetry.addData("power: ", power);
 
-        double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
-        double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;
+            double leftPower = (gearRatioRight > 1) ? power / gearRatioRight : power * gearRatioRight;
+            double rightPower = (gearRatioLeft > 1) ? power / gearRatioLeft : power * gearRatioLeft;
 
-        hardware.motors.get(LEFT).setPower(leftPower);
-        hardware.motors.get(RIGHT).setPower(rightPower);
+            hardware.motors.get(LEFT).setPower(leftPower);
+            hardware.motors.get(RIGHT).setPower(rightPower);
+        }
+        else {
+            hardware.motors.get(LEFT).setPower(0);
+            hardware.motors.get(RIGHT).setPower(0);
+        }
     }
+
+    public boolean reached() { return reached(5); }
+
+    public boolean reached(double threshold) {
+        return Math.abs(hardware.motors.get(LEFT).getCurrentPosition() - position) <= threshold;
+    }
+
 
 
 }

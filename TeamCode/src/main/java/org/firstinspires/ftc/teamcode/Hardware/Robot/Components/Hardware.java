@@ -42,6 +42,8 @@ public class Hardware {
     private static Hardware instance;
     private HardwareMap hardwareMap;
 
+    public VoltageSensor batteryVoltageSensor;
+    public HubBulkRead bulk;
     public MultipleTelemetry telemetry;
     public Threaded_IMU imu;
 
@@ -79,6 +81,8 @@ public class Hardware {
 
     public Hardware(LinearOpMode opMode) {
         this.telemetry = new MultipleTelemetry(opMode.telemetry, FtcDashboard.getInstance().getTelemetry());
+        this.bulk = new HubBulkRead(opMode.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
+        batteryVoltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
         this.hardwareMap = opMode.hardwareMap;
         this.imu = new Threaded_IMU(opMode);
 

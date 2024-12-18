@@ -62,11 +62,13 @@ public class PIDF_controllerTuner extends LinearOpMode {
 
             extension.setControllerPID(p, 0, d, f);
             extension.setPosition(target);
+            extension.update();
 
             endLoopTime = System.nanoTime();
 
             telemetry.addData("target ", target);
             telemetry.addData("Loop time: ", secondsToNanoseconds / (endLoopTime - startLoopTime));
+            telemetry.addData("position: ", extension.getPosition());
 
             telemetry.update();
         }

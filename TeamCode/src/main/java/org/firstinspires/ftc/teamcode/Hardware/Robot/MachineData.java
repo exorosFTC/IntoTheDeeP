@@ -58,4 +58,9 @@ public class MachineData implements Enums, Enums.Mecanum {
         return this;
     }
 
+    public MachineData addTrigger(GamepadKeys.Trigger trigger) {
+        sensitivityTrigger = trigger;
+        return this;
+    }
+
 }

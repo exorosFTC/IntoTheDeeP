@@ -74,6 +74,7 @@ public interface Enums {
             COLLECT,
             PRE_COLLECT,
             TRANSFER,
+            DISABLE
         }
 
         enum IntakePosition{
@@ -88,6 +89,7 @@ public interface Enums {
 
     interface OuttakeEnums {
         enum ArmAction{
+            DISABLE,
             PRE_TRANSFER,
             TRANSFER,
             PRE_SCORE,
@@ -97,11 +99,12 @@ public interface Enums {
 
         enum LiftAction{
             ZERO(0),
-            TRANSFER(40),
+            HANG(100),
+            TRANSFER(0),
             FULL(outtakeMAX),
 
-            HIGH_BASKET(960),
-            HIGH_RUNG(250),
+            HIGH_BASKET(1540),
+            HIGH_RUNG(350),
             LOW_BASKET(0), // we don't do that here
             LOW_RUNG(0); // neither this
 

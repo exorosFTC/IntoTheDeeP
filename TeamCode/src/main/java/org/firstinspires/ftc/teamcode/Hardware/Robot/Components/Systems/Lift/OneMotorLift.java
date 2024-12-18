@@ -23,6 +23,7 @@ public class OneMotorLift {
     private int diff;
 
     private final String motor;
+    private int position;
 
 
 
@@ -71,7 +72,7 @@ public class OneMotorLift {
 
 
     public void setPosition(String key) {
-        int position = Math.min(MAX, Math.max(MIN, values.get(key).intValue()));
+        position = Math.min(MAX, Math.max(MIN, values.get(key).intValue()));
 
         hardware.motors.get(motor).setTargetPosition(position);
         hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -85,7 +86,7 @@ public class OneMotorLift {
     // input [-1, 1] ---- joystick input
     public void extend(double power, boolean noLimit) {
         int pastPosition = hardware.motors.get(motor).getCurrentPosition();
-        int position = pastPosition + (int) (this.diff * manualLiftCoefficient * power);
+        position = pastPosition + (int) (this.diff * manualLiftCoefficient * power);
 
         if (!noLimit) // the MIN limit is set by the touch sensor
             position = Math.min(MAX, position);
@@ -116,6 +117,12 @@ public class OneMotorLift {
 
     public boolean constrained() {
         return hardware.motors.get(motor).isOverCurrent();
+    }
+
+    public boolean reached() { return reached(5); }
+
+    public boolean reached(double threshold) {
+        return Math.abs(hardware.motors.get(motor).getCurrentPosition() - position) <= threshold;
     }
 
 }

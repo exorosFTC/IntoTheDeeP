@@ -6,16 +6,21 @@ public class MecanumConstants {
     public static boolean usingVelocityToggle = true;
     public static boolean usingAcceleration = true;
     public static boolean usingExponentialInput = true;
-    public static boolean usingFieldCentric = true;
+    public static boolean usingFieldCentric = false;
 
-    public static final double fastDrive = 0.8;
-    public static final double slowDrive = 0.35;
+    public static final double fastDrive = 1;
+    public static final double slowDrive = 0.7;
+
+    public static double speed = fastDrive;
+
+    public static final double fastTurn = 0.6;
+    public static final double slowTurn = 0.35;
 
     public static double accelerationScalar = 0.03;
-    public static final double accelerationLiftExtended = 0.01;
-    public static final double accelerationLiftRetracted = 0.03;
+    public static final double accelerationLiftExtended = 0.03;
+    public static final double accelerationLiftRetracted = 0.04;
 
-    public static double driveSensitivity = fastDrive;
+    public static double driveSensitivity = fastTurn;
 
 
     // ODOMETRY CONSTANTS

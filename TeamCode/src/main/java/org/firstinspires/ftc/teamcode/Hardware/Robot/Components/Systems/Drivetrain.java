@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.TRACK_LENGTH;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.TRACK_WIDTH;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationScalar;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingAcceleration;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingExponentialInput;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingFieldCentric;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftBack;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftFront;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightBack;
@@ -15,7 +13,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
@@ -33,10 +30,10 @@ public class Drivetrain {
         hardware.motors.get(LeftBack).setDirection(DcMotorSimple.Direction.REVERSE);
         hardware.motors.get(LeftFront).setDirection(DcMotorSimple.Direction.REVERSE);
 
-        hardware.motors.get(LeftFront).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        /**hardware.motors.get(LeftFront).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         hardware.motors.get(LeftBack).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         hardware.motors.get(RightFront).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        hardware.motors.get(RightBack).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        hardware.motors.get(RightBack).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);*/
 
         this.opMode = opMode;
     }

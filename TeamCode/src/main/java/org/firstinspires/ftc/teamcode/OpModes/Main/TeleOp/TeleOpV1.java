@@ -1,21 +1,14 @@
 package org.firstinspires.ftc.teamcode.OpModes.Main.TeleOp;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.driveSensitivity;
-
 import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Machine;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.MachineData;
-import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
 import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
-import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 @Config
 @TeleOp(name = "🍓", group = "main")
@@ -23,15 +16,9 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
     private Machine robot;
 
     private Enums.Access access = Enums.Access.INTAKE;
-    private Drivetrain drive;
-    private GamepadEx g1;
-
-    public static double p, d, f;
 
     @Override
     protected void Init() {
-        g1 = new GamepadEx(gamepad1);
-        drive = new Drivetrain(this);
         robot = new Machine()
                 .addData(new MachineData()
                         .add(Enums.OpMode.TELE_OP)
@@ -48,7 +35,9 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
     @Override
     protected void WhenStarted() {
         robot.drivetrainThread.start();
+
         robot.system.outtake.setAction(OuttakeAction.PRE_TRANSFER);
+        robot.system.intake.setAction(IntakeAction.PRE_COLLECT);
     }
 
     @Override
@@ -72,11 +61,8 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
         switch (access) {
             case INTAKE: {
                 /** B for COLLECTING from the ground*/
-                if (robot.g2.wasJustPressed(GamepadKeys.Button.B)) {
-                    robot.bulk = new HubBulkRead(this.hardwareMap, LynxModule.BulkCachingMode.AUTO);
+                if (robot.g2.wasJustPressed(GamepadKeys.Button.B))
                     robot.system.intake.setAction(IntakeAction.COLLECT);
-                    robot.bulk = new HubBulkRead(this.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
-                }
 
                 /** A for TRANSFERRING the sample/specimen to the outtake*/
                 if (robot.g2.wasJustPressed(GamepadKeys.Button.A)) {
@@ -118,11 +104,9 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
 
 
                 /** B to actually SCORE*/
-                if (robot.g2.wasJustPressed(GamepadKeys.Button.B)) {
-                    robot.bulk.setMode(LynxModule.BulkCachingMode.AUTO);
+                if (robot.g2.wasJustPressed(GamepadKeys.Button.B))
                     robot.system.outtake.setAction(OuttakeAction.SCORE);
-                    robot.bulk.setMode(LynxModule.BulkCachingMode.MANUAL);
-                }
+
 
                 /** A to get back into TRANSFER*/
                 if (robot.g2.wasJustPressed(GamepadKeys.Button.A)) {
@@ -133,20 +117,21 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
                 }
 
                 /** extend the outtake*/
-                robot.system.outtake.extend(exp(robot.g2.getLeftY() * 0.2));
+                robot.system.outtake.extend(exp(robot.g2.getLeftY() * 0.25));
             } break;
         }
+
+
 
         robot.addTelemetry("OuttakeAction: ", robot.system.outtake.getAction());
         robot.addTelemetry("IntakeAction: ", robot.system.intake.getAction());
 
-        robot.addTelemetry("Score: ", SystemConstants.outtakeScore);
-
         robot.addTelemetry("HasGameElement: ", robot.system.intake.hasGameElement());
         robot.addTelemetry("Access: ", access);
 
-        robot.bulk.clearCache(Enums.Hubs.ALL);
+        robot.hardware.bulk.clearCache(Enums.Hubs.ALL);
 
+        robot.debuggingTelemetry();
         robot.updateSystem();
         robot.updateTelemetry();
     }

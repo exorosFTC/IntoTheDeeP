@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.Hardware.Robot;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.driveSensitivity;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowDrive;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.speed;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingButtonSensitivity;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingDriveSensitivity;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingVelocityToggle;
@@ -12,15 +13,12 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemC
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.usingAprilTagCamera;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.usingOpenCvCamera;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
-import com.qualcomm.hardware.lynx.LynxModule;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.AprilTagCamera;
@@ -31,7 +29,6 @@ import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetra
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.ScorringSystem;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR.ThreeWheel;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR.TwoWheel;
-import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.HubBulkRead;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 import org.firstinspires.ftc.teamcode.Pathing.PathFollowers.GenericFollower;
 
@@ -39,10 +36,7 @@ import javax.annotation.Nullable;
 
 public class Machine {
     public Hardware hardware;
-    public HubBulkRead bulk;
     public Thread drivetrainThread;
-
-    private VoltageSensor batteryVoltageSensor;
 
     public Drivetrain drive;
     public ScorringSystem system;
@@ -54,7 +48,6 @@ public class Machine {
     private double startLoopTime, endLoopTime;
     private final int secondsToNanoseconds = 1000000000;
 
-    private double speed;
     private boolean isFast = true;
     private Trigger isGamepadTriggerPressed;
     private boolean lastTriggerValue = false;
@@ -103,11 +96,8 @@ public class Machine {
     }
 
     public Machine construct(LinearOpMode opMode) {
-        this.bulk = new HubBulkRead(opMode.hardwareMap, LynxModule.BulkCachingMode.MANUAL);
         this.hardware = Hardware.getInstance(opMode);
         this.opMode = opMode;
-
-        batteryVoltageSensor = opMode.hardwareMap.voltageSensor.iterator().next();
 
         drive = new Drivetrain(opMode);
         system = new ScorringSystem(opMode);
@@ -147,10 +137,14 @@ public class Machine {
             drivetrainThread = new Thread(() -> {
                 while (opMode.opModeIsActive()) {
                     drive.update(new Pose(
-                            -g1.getLeftY() * 1,     // forwards
-                            g1.getLeftX() * 1,      // sideways
+                            -g1.getLeftY() * speed,     // forwards
+                            g1.getLeftX() * speed,      // sideways
                             -g1.getRightX() * driveSensitivity      // turning
                     ));
+
+                    if (g1.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
+                        system.hang();
+
                     g1.readButtons();
                 }
             });
@@ -158,10 +152,14 @@ public class Machine {
             drivetrainThread = new Thread(() -> {
                 while (opMode.opModeIsActive()) {
                     drive.update(new Pose(
-                            -g2.getLeftY() * 1,     // forwards
-                            g2.getLeftX() * 1,      // sideways
+                            -g2.getLeftY() * speed,     // forwards
+                            g2.getLeftX() * speed,      // sideways
                             -g2.getRightX() * driveSensitivity      // turning
                     ));
+
+                    if (g2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
+                        system.hang();
+
                     g2.readButtons();
                 }
             });
@@ -204,14 +202,14 @@ public class Machine {
     public void updateDrive(boolean exponential) {
         if (exponential)
             drive.update(new Pose(
-                    exp(-g1.getLeftY()) * 1,            // forwards
-                    exp(g1.getLeftX()) * 1,             // sideways
+                    exp(-g1.getLeftY()) * speed,            // forwards
+                    exp(g1.getLeftX()) * speed,             // sideways
                     exp(-g1.getRightX()) * driveSensitivity     // turning
             ));
         else
             drive.update(new Pose(
-                -g1.getLeftY() * 1,     // forwards
-                g1.getLeftX() * 1,      // sideways
+                -g1.getLeftY() * speed,     // forwards
+                g1.getLeftX() * speed,      // sideways
                 -g1.getRightX() * driveSensitivity      // turning
             ));
     }
@@ -288,9 +286,7 @@ public class Machine {
     }
 
     public void debuggingTelemetry() {
-        if (hardware.telemetry != null) {
-            hardware.telemetry.addData("Drive", 0);
-        }
+        hardware.telemetry.addData("Drive", speed);
     }
 
 

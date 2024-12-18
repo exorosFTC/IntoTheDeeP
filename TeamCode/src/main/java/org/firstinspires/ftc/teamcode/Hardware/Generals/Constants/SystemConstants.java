@@ -24,9 +24,9 @@ public class SystemConstants {
 
     public static final double outtakeTicksPerDegree = 537.7 / 360;
 
-    public static final ColorEx red = new ColorEx(240, 330, 257);
-    public static final ColorEx blue = new ColorEx(185, 327, 300);
-    public static final ColorEx yellow = new ColorEx(265, 412, 272);
+    public static final ColorEx red = new ColorEx(240, 350, 277);
+    public static final ColorEx blue = new ColorEx(195, 345, 310);
+    public static final ColorEx yellow = new ColorEx(265, 420, 280);
 
     public static boolean ENCODER_VALUE_REJECTION = true;
 

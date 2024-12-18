@@ -20,7 +20,6 @@ import androidx.annotation.Nullable;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
