@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastTurn;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowTurn;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.blue;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.extendoMAX;
@@ -45,13 +43,14 @@ public class Intake implements Enums, Enums.IntakeEnums {
     private boolean currentTouch = false, lastTouch = false;
 
     private static final double
-            clawOpen = 0.35,
+            clawTransferOpen = 0.35,
+            clawCollectOpen = 0.45,
             clawClosed = 0.79;
 
     private static final double
             v4bTransfer = 0.19,
-            v4bPreCollect = 0.7,
-            v4bCollect = 0.95;
+            v4bPreCollect = 0.67,
+            v4bCollect = 0.85;
 
     private static final double
             rotationTransfer = 0.1;
@@ -86,9 +85,6 @@ public class Intake implements Enums, Enums.IntakeEnums {
             } break;
 
             case TRANSFER: {
-                if (previousAction == IntakeAction.TRANSFER)
-                    break;
-
                 hardware.servos.get(IntakeRotation).setPosition(rotationTransfer);
                 try { Thread.sleep(100); } catch (InterruptedException e) {}
 
@@ -100,7 +96,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
                     hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
 
                     if (!hasGameElement())
-                        hardware.servos.get(IntakeClaw).setPosition(clawOpen);
+                        hardware.servos.get(IntakeClaw).setPosition(clawCollectOpen);
             } break;
 
             case COLLECT: {
@@ -108,42 +104,24 @@ public class Intake implements Enums, Enums.IntakeEnums {
                     break;
 
                 if (hasGameElement()) {
-                    openClaw(true);
+                    setAction(IntakeAction.TRANSFER);
+                    hardware.servos.get(IntakeClaw).setPosition(clawCollectOpen);
                     break;
                 }
-
-
-                hardware.servos.get(IntakeClaw).setPosition(clawOpen);
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
-
 
                 hardware.servos.get(IntakeV4B).setPosition(v4bCollect);
                 try { Thread.sleep(150); } catch (InterruptedException e) {}
 
                 hardware.servos.get(IntakeClaw).setPosition(clawClosed);
-                try { Thread.sleep(160); } catch (InterruptedException e) {}
+                try { Thread.sleep(250); } catch (InterruptedException e) {}
 
                 if (checkIntakeCatch()) {
                     hardware.servos.get(IntakeRotation).setPosition(rotationTransfer);
-                    hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
+                    hardware.servos.get(IntakeV4B).setPosition(v4bTransfer);
 
-                    try { Thread.sleep(100); } catch (InterruptedException e) {}
-
-                    if (checkIntakeCatch()) {
-                        hardware.servos.get(IntakeV4B).setPosition(v4bTransfer);
-                        ElapsedTime timer = new ElapsedTime();
-
-                        while (!hardware.touch.get(IntakeExtensionTouch).isPressed() && opMode.opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 1300) {
-                            extension.extend(-1);
-                            hardware.bulk.clearCache(Hubs.ALL);
-                        }
-                        extension.extend(0);
-                    } else {
-                        hardware.servos.get(IntakeClaw).setPosition(clawOpen);
-                        hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
-                    }
+                    extendUntilTouch();
                 } else {
-                    hardware.servos.get(IntakeClaw).setPosition(clawOpen);
+                    hardware.servos.get(IntakeClaw).setPosition(clawCollectOpen);
                     hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
                 }
             } break;
@@ -152,6 +130,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
         previousAction = currentAction;
         currentAction = action;
     }
+
 
 
 
@@ -180,6 +159,25 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
     public void extendPosition(IntakePosition position) { extension.setPosition(position.name()); }
 
+    public void extendUntilTouch() {
+        extendUntilTouch(1500);
+    }
+
+    public void extendUntilTouch(int ms) {
+        ElapsedTime failSwitch = new ElapsedTime();
+        int time = (int) (ms * extension.getPosition() / extendoMAX);
+
+        while (!hardware.touch.get(IntakeExtensionTouch).isPressed() && opMode.opModeIsActive() && failSwitch.time(TimeUnit.MILLISECONDS) < time) {
+            extension.extend(-1);
+            hardware.bulk.clearCache(Hubs.ALL);
+        }
+
+        opMode.gamepad2.rumble(1, 1, 700);
+        extension.resetEncoders();
+    }
+
+
+
 
     public void rotate(double left, double right, double sensitivity) {
         rotate(left, right, sensitivity, true);
@@ -198,40 +196,41 @@ public class Intake implements Enums, Enums.IntakeEnums {
         }
     }
 
-    public void openClaw(boolean open) {
-        hardware.servos.get(IntakeClaw).setPosition((open) ? clawOpen : clawClosed);
+    public void openClawTransfer(boolean open) {
+        hardware.servos.get(IntakeClaw).setPosition((open) ? clawTransferOpen : clawClosed);
     }
 
     public void toggleClaw() {
-        if (hardware.servos.get(IntakeClaw).getPosition() == clawOpen)
-            openClaw(false);
-        else openClaw(true);
+        if (hardware.servos.get(IntakeClaw).getPosition() == clawTransferOpen)
+            openClawTransfer(false);
+        else openClawTransfer(true);
     }
 
 
+
     private double exponential(double x) { return x * x * x; }
+
+
+
     private boolean checkIntakeCatch() {
         if (hardware.color.get(IntakeColor).getDistance(DistanceUnit.MM) > inIntakeThreshold)
             return false;
 
-        if ((SystemConstants.autoOnBlue && checkColor() != Color.RED)
+        ColorEx input = new ColorEx(
+                hardware.color.get(IntakeColor).red(),
+                hardware.color.get(IntakeColor).green(),
+                hardware.color.get(IntakeColor).blue());
+
+
+        if ((SystemConstants.autoOnBlue && checkColor(input) != Color.RED)
                                         ||
-                (!SystemConstants.autoOnBlue && checkColor() != Color.BLUE))
+                (!SystemConstants.autoOnBlue && checkColor(input) != Color.BLUE))
             return true;
 
         return false;
     }
 
-    private Enums.Color checkColor() {
-        double r,g,b;
-        ColorEx color;
-
-        r = hardware.color.get(IntakeColor).red();
-        g = hardware.color.get(IntakeColor).green();
-        b = hardware.color.get(IntakeColor).blue();
-
-        color = new ColorEx(r, g, b);
-
+    private Enums.Color checkColor(ColorEx color) {
         if (color.sameAs(blue))
             return Color.BLUE;
         if (color.sameAs(red))

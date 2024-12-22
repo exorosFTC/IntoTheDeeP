@@ -103,8 +103,8 @@ public interface Enums {
             TRANSFER(0),
             FULL(outtakeMAX),
 
-            HIGH_BASKET(1540),
-            HIGH_RUNG(350),
+            HIGH_BASKET(1480),
+            HIGH_RUNG(290),
             LOW_BASKET(0), // we don't do that here
             LOW_RUNG(0); // neither this
 

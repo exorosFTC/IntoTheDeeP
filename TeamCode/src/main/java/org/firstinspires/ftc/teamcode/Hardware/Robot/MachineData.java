@@ -2,14 +2,15 @@ package org.firstinspires.ftc.teamcode.Hardware.Robot;
 
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 
 public class MachineData implements Enums, Enums.Mecanum {
 
-    public Localizers localizer;
+    public Localizers localizer = Localizers.TWO_WHEELS;
     public OpMode opModeType;
-    public MotionPackage motionPackage;
+    public MotionPackage motionPackage = MotionPackage.ROADRUNNER;
 
     public GamepadKeys.Button sensitivityButton = null;
     public GamepadKeys.Trigger sensitivityTrigger = null;
@@ -53,10 +54,21 @@ public class MachineData implements Enums, Enums.Mecanum {
         return this;
     }
 
+    public MachineData setUsingAcceleration(boolean flag) {
+        MecanumConstants.usingAcceleration = flag;
+        return this;
+    }
+
+    public MachineData setUsingExponentialInput(boolean flag) {
+        MecanumConstants.usingExponentialInput = flag;
+        return this;
+    }
+
     public MachineData setMultithreading(boolean flag) {
         SystemConstants.multithreading = flag;
         return this;
     }
+
 
     public MachineData addTrigger(GamepadKeys.Trigger trigger) {
         sensitivityTrigger = trigger;

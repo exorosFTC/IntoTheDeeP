@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes.Main.TeleOp;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.distance_sensorToClaw;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -15,6 +17,7 @@ import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
 public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.OuttakeEnums {
     private Machine robot;
 
+    public static int toSensor = distance_sensorToClaw;
     private Enums.Access access = Enums.Access.INTAKE;
 
     @Override
@@ -24,7 +27,9 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
                         .add(Enums.OpMode.TELE_OP)
                         .getLoopTime(true)
                         .setUsingOpenCv(false)
-                        .setUsingAprilTag(false))
+                        .setUsingAprilTag(false)
+                        .setUsingAcceleration(true)
+                        .setUsingExponentialInput(true))
                 .addGamepads(Enums.Gamepads.BOTH)
                 .construct(this);
 
@@ -75,18 +80,15 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
                     }
                 }
 
-                /** X to TOGGLE the claw*/
-                if (robot.g2.wasJustPressed(GamepadKeys.Button.X))
-                    robot.system.intake.toggleClaw();
-
                 /** rotating the intake with triggers*/
                 robot.system.intake.rotate(
                         robot.g2.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER),
                         robot.g2.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER),
-                        0.04);
+                        0.052);
 
                 /** extend the intake*/
-                robot.system.intake.extend(exp(robot.g2.getLeftY()));
+                double input = exp(robot.g2.getLeftY());
+                robot.system.intake.extend((Math.abs(input) <= 0.5) ? input * 0.3 : input);
             } break;
 
             case OUTTAKE: {
@@ -103,11 +105,6 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
                 }
 
 
-                /** B to actually SCORE*/
-                if (robot.g2.wasJustPressed(GamepadKeys.Button.B))
-                    robot.system.outtake.setAction(OuttakeAction.SCORE);
-
-
                 /** A to get back into TRANSFER*/
                 if (robot.g2.wasJustPressed(GamepadKeys.Button.A)) {
                     robot.system.outtake.setAction(OuttakeAction.PRE_TRANSFER);
@@ -122,6 +119,9 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
         }
 
 
+        if (robot.g2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
+            robot.system.hangG2();
+
 
         robot.addTelemetry("OuttakeAction: ", robot.system.outtake.getAction());
         robot.addTelemetry("IntakeAction: ", robot.system.intake.getAction());
@@ -134,7 +134,9 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
         robot.debuggingTelemetry();
         robot.updateSystem();
         robot.updateTelemetry();
+
     }
+
 
     private double exp(double x) {
         return x * x * x;

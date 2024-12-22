@@ -40,7 +40,7 @@ import java.util.Map;
 
 public class Hardware {
     private static Hardware instance;
-    private HardwareMap hardwareMap;
+    public HardwareMap hardwareMap;
 
     public VoltageSensor batteryVoltageSensor;
     public HubBulkRead bulk;

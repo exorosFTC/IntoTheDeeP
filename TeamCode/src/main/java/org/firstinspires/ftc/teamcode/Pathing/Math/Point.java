@@ -49,6 +49,12 @@ public class Point {
 
     public Point rotate_polar(double amount){ return Point.toPolar(hypot(), atan()+amount); }
 
+    public Point rotate_matrix(double rad) {
+        return new Point(x * Math.cos(rad) - y * Math.sin(rad),
+                            x * Math.sin(rad) + y * Math.cos(rad));
+    }
+
+    public Point toInch() { return new Point(x / 2.54, y / 2.54); }
     //......................................................................
 
 }

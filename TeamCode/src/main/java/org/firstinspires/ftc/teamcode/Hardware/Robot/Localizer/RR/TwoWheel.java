@@ -6,6 +6,8 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_WHEEL_RADIUS_CM;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_X_MULTIPLIER;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_Y_MULTIPLIER;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.forward;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.perpendicular;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOdometry;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.PerpendicularOdometry;
 import static org.firstinspires.ftc.teamcode.Pathing.Math.Transformations.toCustomPose;
@@ -16,6 +18,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.TwoTrackingWheelLocalizer;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -49,14 +52,18 @@ public class TwoWheel extends TwoTrackingWheelLocalizer implements Localizer {
     public TwoWheel(LinearOpMode opMode){
 
         super(Arrays.asList(
-                new Pose2d(0, PARALLEL_Y, 0),
-                new Pose2d(PERPENDICULAR_X, 0, Math.toRadians(90))
+                new Pose2d(toIN(forward.x), toIN(forward.y), 0),
+                new Pose2d(toIN(perpendicular.x), toIN(perpendicular.y), Math.toRadians(90))
         ));
 
         hardware = Hardware.getInstance(opMode);
 
         parallelEncoder = new Encoder(hardware.motors.get(LeftOdometry));
         perpendicularEncoder = new Encoder(hardware.motors.get(PerpendicularOdometry));
+
+        parallelEncoder.setDirection(Encoder.Direction.REVERSE);
+        perpendicularEncoder.setDirection(Encoder.Direction.REVERSE);
+
         imu = new Threaded_IMU(opMode);
     }
 

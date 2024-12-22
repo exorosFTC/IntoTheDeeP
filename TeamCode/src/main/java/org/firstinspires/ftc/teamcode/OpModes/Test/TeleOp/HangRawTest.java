@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Line;
 
-@TeleOp(name = "hang", group = "test")
+@TeleOp(name = "hangG1", group = "test")
 public class HangRawTest extends LinearOpMode {
     private DcMotorEx LEFT, RIGHT;
     private GamepadEx g2;

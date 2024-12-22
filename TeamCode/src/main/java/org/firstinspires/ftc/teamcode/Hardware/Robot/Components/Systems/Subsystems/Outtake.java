@@ -5,6 +5,8 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastTurn;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowTurn;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.distance_sensorToClaw;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.extensionMultiplier;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeMAX;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOuttakeMotor;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeClaw;
@@ -37,11 +39,12 @@ public class Outtake implements Enums.OuttakeEnums {
     public final TwoMotorLift extension;
 
     private static final double
-            clawOpen = 0.55,
-            clawClosed = 0.66;
+            clawTransferOpen = 0.56,
+            clawFullyOpen = 0.55,
+            clawClosed = 0.68;
 
     private static final double
-            armTransfer = 0.01,
+            armTransfer = 0.0,
             armScore = 0.85;
 
     private static final double
@@ -51,8 +54,8 @@ public class Outtake implements Enums.OuttakeEnums {
 
 
     private static final double
-            wristTransfer = 0.73,
-            wristScoreSpecimens = 0.56,
+            wristTransfer = 0.74,
+            wristScoreSpecimens = 0.58,
             wristScoreSamples = 0.66;
 
     private static final double // mm
@@ -94,11 +97,11 @@ public class Outtake implements Enums.OuttakeEnums {
 
 
     public void openClaw(boolean open) {
-        hardware.servos.get(OuttakeClaw).setPosition((open) ? clawOpen : clawClosed);
+        hardware.servos.get(OuttakeClaw).setPosition((open) ? clawFullyOpen : clawClosed);
     }
 
     public void toggleClaw() {
-        if (hardware.servos.get(OuttakeClaw).getPosition() == clawOpen)
+        if (hardware.servos.get(OuttakeClaw).getPosition() == clawFullyOpen)
             openClaw(false);
         else openClaw(true);
     }
@@ -120,10 +123,9 @@ public class Outtake implements Enums.OuttakeEnums {
                     try { Thread.sleep(200); } catch (InterruptedException e) {}
                 }
 
-                if (hardware.servos.get(OuttakeRightPivot).getPosition() != armScore) {
-                    hardware.servos.get(OuttakeLeftPivot).setPosition(armScore);
-                    hardware.servos.get(OuttakeRightPivot).setPosition(armScore);
-                }
+                hardware.servos.get(OuttakeLeftPivot).setPosition(armScore);
+                hardware.servos.get(OuttakeRightPivot).setPosition(armScore);
+
 
             } break;
 
@@ -136,12 +138,12 @@ public class Outtake implements Enums.OuttakeEnums {
                     hardware.bulk.clearCache(Enums.Hubs.ALL);
                 }
 
-                hardware.servos.get(OuttakeClaw).setPosition(clawOpen - 0.09);
+                hardware.servos.get(OuttakeClaw).setPosition(clawFullyOpen);
 
             } break;
 
             case SCORE_SAMPLES: {
-                hardware.servos.get(OuttakeClaw).setPosition(clawOpen - 0.09);
+                hardware.servos.get(OuttakeClaw).setPosition(clawFullyOpen - 0.18);
             } break;
 
             case PRE_TRANSFER: {
@@ -151,17 +153,16 @@ public class Outtake implements Enums.OuttakeEnums {
                 hardware.servos.get(OuttakeExtension).setPosition(extendoTransfer);
                 hardware.servos.get(OuttakeWrist).setPosition(wristTransfer);
 
-                hardware.servos.get(OuttakeClaw).setPosition(clawOpen);
+                hardware.servos.get(OuttakeClaw).setPosition(clawTransferOpen);
             } break;
 
             case TRANSFER: {
-                double distance = hardware.distance.get(OuttakeDistance).getDistance(DistanceUnit.MM);
-                inverseKinematics(distance - 20);
+                double distance_sensorToSample = hardware.distance.get(OuttakeDistance).getDistance(DistanceUnit.MM);
+                inverseKinematics(distance_sensorToSample - distance_sensorToClaw);
 
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {} // debugging (default 100)
 
                 hardware.servos.get(OuttakeClaw).setPosition(clawClosed);
-
             } break;
 
         }
@@ -260,7 +261,7 @@ public class Outtake implements Enums.OuttakeEnums {
         double c = 2 * r * target * Math.cos(alpha) - target * target;
         double delta = b * b - 4 * a * c;
 
-        double dl = (-b + Math.sqrt(delta)) / 2 * 0.8;
+        double dl = (-b + Math.sqrt(delta)) / 2 * extensionMultiplier;
         double R = dl + r;
 
         double dtheta1 = Math.acos((target * target - r * r - R * R) / (-2 * r * R));
@@ -277,7 +278,7 @@ public class Outtake implements Enums.OuttakeEnums {
         hardware.servos.get(OuttakeLeftPivot).setPosition(theta1);
         hardware.servos.get(OuttakeRightPivot).setPosition(theta1);
 
-        hardware.servos.get(OuttakeExtension).setPosition(theta2); //inconsistency in arm linearity
+        hardware.servos.get(OuttakeExtension).setPosition(theta2);
         hardware.servos.get(OuttakeWrist).setPosition(theta3);
     }
 
@@ -287,11 +288,10 @@ public class Outtake implements Enums.OuttakeEnums {
 
     public OuttakeAction getPreviousAction() { return previousAction; }
 
+    public double getKinematicPose() { return kinematicPose; }
+
+
+
     public boolean hasJustChangedTo(OuttakeAction action) { return action == currentAction && action != previousAction; }
 
-
-    public void update() { extension.update(); }
-
-
-    public double getKinematicPose() { return kinematicPose; }
 }

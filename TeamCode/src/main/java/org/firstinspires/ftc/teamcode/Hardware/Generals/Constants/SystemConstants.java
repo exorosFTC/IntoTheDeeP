@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.ColorEx;
 
 public class SystemConstants {
 
-    public static RevHubOrientationOnRobot.LogoFacingDirection LOGO_DIRECTION = RevHubOrientationOnRobot.LogoFacingDirection.FORWARD;
+    public static RevHubOrientationOnRobot.LogoFacingDirection LOGO_DIRECTION = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
     public static RevHubOrientationOnRobot.UsbFacingDirection  USB_DIRECTION  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
     public static Enums.OuttakeEnums.ArmAction outtakeScore = Enums.OuttakeEnums.ArmAction.SCORE_SAMPLES;
@@ -16,10 +16,14 @@ public class SystemConstants {
     public static final int outtakeMAX = 1650;
     public static final int extendoMAX = 470;
 
+    public static double extensionMultiplier = 0.8;
+
+    public static int distance_sensorToClaw = 20;
+
     public static final double rotationMin = 0;
     public static final double rotationMax = 0.65;
 
-    public static final double inIntakeThreshold = 30; //mm
+    public static final double inIntakeThreshold = 31.5; //mm
     public static final double v4bSafeDropdown = 60; //ticks
 
     public static final double outtakeTicksPerDegree = 537.7 / 360;

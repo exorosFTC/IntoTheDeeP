@@ -30,9 +30,9 @@ public class HardwareNames {
 
     // TODO: tune these
     // If you use 2 or no odometry at all, set the names to "" (empty string)
-    public static final String LeftOdometry = LeftFront;
+    public static final String LeftOdometry = RightBack;
     public static final String RightOdometry = "";
-    public static final String PerpendicularOdometry = RightBack;
+    public static final String PerpendicularOdometry = LeftFront;
 
     // you can leave these as they are
     public static final List<String> EncoderNamesList = Arrays.asList(

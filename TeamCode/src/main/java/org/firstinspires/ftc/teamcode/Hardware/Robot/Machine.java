@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.Hardware.Robot;
 
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.AngularP;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.fastDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.driveSensitivity;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearP;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.slowDrive;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.speed;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingButtonSensitivity;
@@ -12,13 +14,15 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemC
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.telemetryAddLoopTime;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.usingAprilTagCamera;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.usingOpenCvCamera;
+import static org.firstinspires.ftc.teamcode.Pathing.Math.MathFormulas.FindShortestPath;
 
 import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants;
+import org.apache.commons.math3.geometry.euclidean.twod.Line;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.AprilTagCamera;
@@ -27,15 +31,15 @@ import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Pipelines.PropDetectionPip
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.ScorringSystem;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR.ThreeWheel;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR.TwoWheel;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Point;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
-import org.firstinspires.ftc.teamcode.Pathing.PathFollowers.GenericFollower;
 
 import javax.annotation.Nullable;
 
 public class Machine {
     public Hardware hardware;
+    //public Follower follower;
     public Thread drivetrainThread;
 
     public Drivetrain drive;
@@ -57,8 +61,6 @@ public class Machine {
 
     private LinearOpMode opMode;
 
-    public Localizer localizer;
-    public GenericFollower follower;
 
     //default data
     private MachineData data = new MachineData()
@@ -99,6 +101,7 @@ public class Machine {
         this.hardware = Hardware.getInstance(opMode);
         this.opMode = opMode;
 
+        //follower = new Follower(hardware);
         drive = new Drivetrain(opMode);
         system = new ScorringSystem(opMode);
 
@@ -115,15 +118,8 @@ public class Machine {
         if (data.sensitivityTrigger == null && data.sensitivityButton == null)
             usingDriveSensitivity = false;
 
-        if (data.opModeType == Enums.OpMode.AUTONOMUS) {
-            switch (data.localizer) {
-                case TWO_WHEELS: localizer = new TwoWheel(opMode);
-                case THREE_WHEELS: localizer = new ThreeWheel(opMode);
-            }
-            follower = new GenericFollower(localizer);
-        }
-
-        createDrivetrainThread();
+        if (data.opModeType != Enums.OpMode.AUTONOMUS)
+            createG1Thread();
 
         return this;
     }
@@ -132,38 +128,32 @@ public class Machine {
 
 
 
-    private void createDrivetrainThread() {
+    private void createG1Thread() {
         if (g1 != null)
             drivetrainThread = new Thread(() -> {
                 while (opMode.opModeIsActive()) {
                     drive.update(new Pose(
-                            -g1.getLeftY() * speed,     // forwards
-                            g1.getLeftX() * speed,      // sideways
-                            -g1.getRightX() * driveSensitivity      // turning
-                    ));
+                            g1.getLeftY() * speed,      // forwards
+                            -g1.getLeftX() * speed,                  // sideways
+                            -g1.getRightX() * driveSensitivity     // turning
+                            ));
 
-                    if (g1.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
-                        system.hang();
+                    if (g1.wasJustPressed(GamepadKeys.Button.DPAD_DOWN)) {
+                        system.hangG1();
+                        drivetrainThread.interrupt();
+                    }
+
+                    /** B to actually SCORE*/
+                    if (g1.wasJustPressed(GamepadKeys.Button.A))
+                        system.outtake.setAction(Enums.OuttakeEnums.OuttakeAction.SCORE);
 
                     g1.readButtons();
                 }
             });
-        else if (g2 != null)
-            drivetrainThread = new Thread(() -> {
-                while (opMode.opModeIsActive()) {
-                    drive.update(new Pose(
-                            -g2.getLeftY() * speed,     // forwards
-                            g2.getLeftX() * speed,      // sideways
-                            -g2.getRightX() * driveSensitivity      // turning
-                    ));
-
-                    if (g2.wasJustPressed(GamepadKeys.Button.DPAD_DOWN))
-                        system.hang();
-
-                    g2.readButtons();
-                }
-            });
     }
+
+
+
 
     private void updateDriveSensitivity() {
         if (usingDriveSensitivity) {
@@ -192,31 +182,12 @@ public class Machine {
     }
 
     private void updateGamepad() {
-        if (g1 != null) g1.readButtons();
+        //if (g1 != null) g1.readButtons();
         if (g2 != null) g2.readButtons();
     }
 
 
-    public void updateDrive() { updateDrive(false); }
 
-    public void updateDrive(boolean exponential) {
-        if (exponential)
-            drive.update(new Pose(
-                    exp(-g1.getLeftY()) * speed,            // forwards
-                    exp(g1.getLeftX()) * speed,             // sideways
-                    exp(-g1.getRightX()) * driveSensitivity     // turning
-            ));
-        else
-            drive.update(new Pose(
-                -g1.getLeftY() * speed,     // forwards
-                g1.getLeftX() * speed,      // sideways
-                -g1.getRightX() * driveSensitivity      // turning
-            ));
-    }
-
-    public void updateDrive(double x, double y, double head) {
-        drive.update(new Pose(x, y, head));
-    }
 
     public void updateSystem() {
         if (data.opModeType == Enums.OpMode.TELE_OP) {
@@ -248,7 +219,10 @@ public class Machine {
     public void searchForProp() {
         if (openCvCamera == null || !(openCvCamera.getPipeline() instanceof PropDetectionPipeline)) { randomization = null; }
             else {
+
+
                 Enums.Randomization detection = openCvCamera.getRandomization();
+
 
                 if (detection != null)
                     randomization = detection;
@@ -289,8 +263,6 @@ public class Machine {
         hardware.telemetry.addData("Drive", speed);
     }
 
-
-
     public void setAccess(Enums.Access access) {
         switch (access) {
             case INTAKE: {
@@ -304,4 +276,8 @@ public class Machine {
             } break;
         }
     }
+
+
+
+
 }

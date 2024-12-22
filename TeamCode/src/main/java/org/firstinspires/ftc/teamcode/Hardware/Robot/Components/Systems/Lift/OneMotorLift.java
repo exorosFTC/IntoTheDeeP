@@ -79,6 +79,14 @@ public class OneMotorLift {
         hardware.motors.get(motor).setPower(1);
     }
 
+    public void setPosition(int position) {
+        this.position = position;
+
+        hardware.motors.get(motor).setTargetPosition(position);
+        hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        hardware.motors.get(motor).setPower(1);
+    }
+
     public void extend(double power) {
         extend(power, false);
     }
@@ -112,6 +120,7 @@ public class OneMotorLift {
 
     public void resetEncoders() {
         hardware.motors.get(motor).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        hardware.motors.get(motor).setTargetPosition(0);
         hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 

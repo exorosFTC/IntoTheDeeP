@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -56,8 +57,6 @@ public class IntakeTest extends ExoMode implements Enums.OuttakeEnums, Enums.Int
         if (g2.wasJustPressed(GamepadKeys.Button.A))
             intake.setAction(IntakeAction.TRANSFER);
 
-        if (g2.wasJustPressed(GamepadKeys.Button.Y))
-            intake.toggleClaw();
 
         telemetry.addData("action: ", intake.getAction());
         telemetry.addData("current (Amps): ", intake.getCurrent());
