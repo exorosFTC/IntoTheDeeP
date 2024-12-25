@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
 
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.IMU.Threaded_IMU;
-import org.firstinspires.ftc.teamcode.Pathing.RR.util.Encoder;
+import org.firstinspires.ftc.teamcode.Pathing.Encoder;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 import java.util.Arrays;

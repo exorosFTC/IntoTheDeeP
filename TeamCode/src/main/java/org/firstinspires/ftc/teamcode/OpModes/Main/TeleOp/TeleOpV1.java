@@ -20,6 +20,10 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
     public static int toSensor = distance_sensorToClaw;
     private Enums.Access access = Enums.Access.INTAKE;
 
+    private final double fast = 1, slow = 0.1;
+    private boolean sensitivityToggle = true;
+    private double intakeSensitivity = fast;
+
     @Override
     protected void Init() {
         robot = new Machine()
@@ -88,7 +92,15 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
 
                 /** extend the intake*/
                 double input = exp(robot.g2.getLeftY());
-                robot.system.intake.extend((Math.abs(input) <= 0.5) ? input * 0.3 : input);
+
+                if (robot.g2.wasJustPressed(GamepadKeys.Button.X)){
+                    sensitivityToggle = !sensitivityToggle;
+
+                    if(sensitivityToggle) intakeSensitivity = fast;
+                    else intakeSensitivity = slow;
+                }
+
+                robot.system.intake.extend(input * intakeSensitivity);
             } break;
 
             case OUTTAKE: {
@@ -110,6 +122,7 @@ public class TeleOpV1 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
                     robot.system.outtake.setAction(OuttakeAction.PRE_TRANSFER);
 
                     access = Enums.Access.INTAKE;
+                    intakeSensitivity = fast;
                     robot.setAccess(Enums.Access.INTAKE);
                 }
 

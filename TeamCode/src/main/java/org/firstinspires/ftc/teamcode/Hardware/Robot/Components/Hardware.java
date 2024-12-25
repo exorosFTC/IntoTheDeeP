@@ -40,12 +40,12 @@ import java.util.Map;
 
 public class Hardware {
     private static Hardware instance;
-    public HardwareMap hardwareMap;
+    public final HardwareMap hardwareMap;
 
-    public VoltageSensor batteryVoltageSensor;
-    public HubBulkRead bulk;
-    public MultipleTelemetry telemetry;
-    public Threaded_IMU imu;
+    public final VoltageSensor batteryVoltageSensor;
+    public final MultipleTelemetry telemetry;
+    public final HubBulkRead bulk;
+    public final Threaded_IMU imu;
 
 
 

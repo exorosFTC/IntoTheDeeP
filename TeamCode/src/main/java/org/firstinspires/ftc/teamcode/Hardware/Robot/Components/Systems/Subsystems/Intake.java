@@ -44,13 +44,13 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
     private static final double
             clawTransferOpen = 0.35,
-            clawCollectOpen = 0.45,
+            clawCollectOpen = 0.32,
             clawClosed = 0.79;
 
     private static final double
             v4bTransfer = 0.19,
             v4bPreCollect = 0.67,
-            v4bCollect = 0.85;
+            v4bCollect = 0.825;
 
     private static final double
             rotationTransfer = 0.1;

@@ -12,15 +12,20 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Machine;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.MachineData;
 import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
+import org.firstinspires.ftc.teamcode.Pathing.AutoBase;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Point;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
+import javax.crypto.Mac;
+
 @Config
-@Autonomous(name = "hold", group = "test")
+@Autonomous(name = "MovementPIDTuner", group = "tuning")
 public class AutoTuner extends ExoMode {
-    private Drivetrain drive;
-    private Hardware hardware;
+    private Machine robot;
+    private AutoBase auto;
 
     public static double linP = LinearP, angP = AngularP;
     public static double linD = LinearD, angD = AngularD;
@@ -28,12 +33,21 @@ public class AutoTuner extends ExoMode {
 
     @Override
     protected void Init() {
-        drive = new Drivetrain(this);
-        hardware = Hardware.getInstance(this);
+        robot = new Machine()
+                .addData(new MachineData()
+                        .add(Enums.OpMode.AUTONOMUS)
+                        .setAutoOnBlue(false)
+                        .getLoopTime(true)
+                        .setUsingOpenCv(false)
+                        .setUsingAprilTag(false)
+                        .setUsingAcceleration(false)
+                        .setUsingExponentialInput(false))
+                .construct(this);
     }
 
     @Override
     protected void WhenStarted() {
+        auto = new AutoBase(this, robot);
     }
 
     @Override
@@ -43,38 +57,9 @@ public class AutoTuner extends ExoMode {
 
     @Override
     protected void Loop() {
-        drive.hold(new Pose(x, y, Math.toRadians(head)));
+        auto.driveTo(new Pose(x, y, head));
 
-        drive.linearC.setPID(linP, 0, linD);
-        drive.angularC.setPID(angP, 0, angD);
-
-        Pose currentPose = drive.localizer.getRobotPosition();
-        drive.driveVector = new Pose(drive.linearC.calculate(currentPose.x, drive.target.x),
-                drive.linearC.calculate(currentPose.y, drive.target.y),
-                0);
-        Point rotatedDiff = new Point(drive.driveVector.x, drive.driveVector.y).rotate_matrix(-Math.toRadians(currentPose.heading));
-
-        drive.driveVector = new Pose(rotatedDiff.x,
-                -rotatedDiff.y,
-                drive.angularC.calculate(-FindShortestPath(Math.toRadians(currentPose.heading), drive.target.heading)));
-
-
-        drive.update(drive.driveVector.multiplyBy(12 / hardware.batteryVoltageSensor.getVoltage()));
-        drive.localizer.update();
-
-        hardware.telemetry.update();
-        hardware.bulk.clearCache(Enums.Hubs.ALL);
-
-
-        /**robot.addTelemetry("x: ", x);
-        robot.addTelemetry("y: ", y);
-        robot.addTelemetry("head: ", head);
-
-        robot.addTelemetry("current x", Math.round(robot.localizer.getRobotPosition().x * 100) / 100);
-        robot.addTelemetry("current y", Math.round(robot.localizer.getRobotPosition().y * 100) / 100);
-
-        robot.addTelemetry("current heading (deg)", Math.toDegrees(robot.localizer.getAngle(AngleUnit.RADIANS)));
-*/
-
+        auto.setLinearPID(linP, 0, linD);
+        auto.setAngularPID(angP, 0, angD);
     }
 }

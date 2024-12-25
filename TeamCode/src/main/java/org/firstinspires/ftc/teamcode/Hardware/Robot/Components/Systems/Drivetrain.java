@@ -27,30 +27,17 @@ import org.firstinspires.ftc.teamcode.Pathing.Math.Point;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 public class Drivetrain {
-    private static Hardware hardware;
-    private static LinearOpMode opMode;
-    public Localizer localizer;
+    private final Hardware hardware;
+    private final LinearOpMode opMode;
 
-    public PIDController linearC, angularC;
-
-    public Pose target = new Pose();
-    public Pose driveVector = new Pose();
-
-    private static double lastX = 0, lastY = 0, lastHead = 0;
-
+    private double lastX = 0, lastY = 0, lastHead = 0;
     private double LF, RF, LB, RB;
 
     public Drivetrain(LinearOpMode opMode) {
         hardware = Hardware.getInstance(opMode);
 
-        linearC = new PIDController(LinearP, 0, LinearD);
-        angularC = new PIDController(AngularP, 0, AngularD);
-
         hardware.motors.get(LeftBack).setDirection(DcMotorSimple.Direction.REVERSE);
         hardware.motors.get(LeftFront).setDirection(DcMotorSimple.Direction.REVERSE);
-
-        localizer = new TwoWheel(opMode);
-        localizer.setPositionEstimate(new Pose());
 
         this.opMode = opMode;
     }
@@ -77,8 +64,6 @@ public class Drivetrain {
         hardware.motors.get(RightFront).setPower(RF);
         hardware.motors.get(RightBack).setPower(RB);
 
-        localizer.update();
-
     }
 
     public void update(double lf, double lb, double rf, double rb) {
@@ -86,8 +71,6 @@ public class Drivetrain {
         hardware.motors.get(LeftBack).setPower(lb);
         hardware.motors.get(RightFront).setPower(rf);
         hardware.motors.get(RightBack).setPower(rb);
-
-        localizer.update();
     }
 
 
@@ -129,11 +112,4 @@ public class Drivetrain {
         hardware.motors.get(RightBack).setMotorDisable();
     }
 
-
-
-    public void hold(Pose pose) { target = pose; }
-
-    public boolean isBusy() {
-        return !driveVector.closeToZero(0.12);
-    }
 }

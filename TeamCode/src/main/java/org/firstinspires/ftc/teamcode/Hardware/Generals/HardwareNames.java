@@ -51,11 +51,12 @@ public class HardwareNames {
 
     public static final String OuttakeExtension = "outtakeExtension";
     public static final String OuttakeWrist = "outtakeWrist";
+    public static final String OuttakeRotation = "outtakeRotation";
     public static final String OuttakeClaw = "outtakeClaw";
 
     public static List<String> ServoNamesList = Arrays.asList(
             IntakeV4B, IntakeClaw, IntakeRotation,
-            OuttakeLeftPivot, OuttakeRightPivot, OuttakeExtension, OuttakeWrist, OuttakeClaw
+            OuttakeLeftPivot, OuttakeRightPivot, OuttakeExtension, OuttakeWrist, OuttakeRotation, OuttakeClaw
     );
 
 

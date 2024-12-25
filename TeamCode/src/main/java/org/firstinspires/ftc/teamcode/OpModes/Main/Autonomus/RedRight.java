@@ -1,28 +1,16 @@
 package org.firstinspires.ftc.teamcode.OpModes.Main.Autonomus;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.AngularP;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearP;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeRotation;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeExtension;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeWrist;
-import static org.firstinspires.ftc.teamcode.Pathing.Math.MathFormulas.FindShortestPath;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.sun.tools.javac.file.RelativePath;
 
-import org.apache.commons.math3.exception.ZeroException;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Machine;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.MachineData;
 import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
-import org.firstinspires.ftc.teamcode.Pathing.Follower;
-import org.firstinspires.ftc.teamcode.Pathing.Math.Point;
+import org.firstinspires.ftc.teamcode.Pathing.AutoBase;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
-
-import java.util.concurrent.TimeUnit;
 
 @Autonomous(group = "aa_main", preselectTeleOp = "🍓")
 public class RedRight extends ExoMode {
@@ -46,7 +34,7 @@ public class RedRight extends ExoMode {
 
     @Override
     protected void WhenStarted() {
-        Follower auto = new Follower(this, robot)
+        AutoBase auto = new AutoBase(this, robot)
                 // score the pre-loaded specimen
                     .moveSystem(() -> robot.system.outtake.openClaw(false))
                 .driveTo(new Pose(23, -5, Math.toRadians(180)))

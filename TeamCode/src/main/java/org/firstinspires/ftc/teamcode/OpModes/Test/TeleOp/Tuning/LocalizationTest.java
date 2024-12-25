@@ -1,54 +1,63 @@
 package org.firstinspires.ftc.teamcode.OpModes.Test.TeleOp.Tuning;
 
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.driveSensitivity;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.speed;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
+import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR.TwoWheel;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Machine;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.MachineData;
+import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 @TeleOp(name = "RR Localizer", group = "tuning")
 public class LocalizationTest extends LinearOpMode {
-    Machine robot;
+    private Localizer localizer;
+    private Hardware hardware;
+    private Drivetrain drive;
+
+    private GamepadEx g1;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        robot = new Machine()
-                .addData(new MachineData()
-                        .add(Enums.OpMode.AUTONOMUS)
-                        .getLoopTime(true)
-                        .setUsingOpenCv(false)
-                        .setUsingAprilTag(false))
-                .addGamepads(Enums.Gamepads.BOTH)
-                .construct(this);
+        hardware = Hardware.getInstance(this);
+        localizer = new TwoWheel(this);
+        drive = new Drivetrain(this);
+
+        g1 = new GamepadEx(gamepad1);
+
 
         waitForStart();
 
-        robot.drivetrainThread.start();
+        localizer.setPositionEstimate(new Pose());
 
         while (opModeIsActive()) {
-            robot.drive.localizer.update();
-            robot.hardware.bulk.clearCache(Enums.Hubs.ALL);
+            drive.update(new Pose(
+                    g1.getLeftY(),
+                    -g1.getLeftX(),
+                    -g1.getRightX()
+            ));
 
-            telemetry.addData("x", Math.round(robot.drive.localizer.getRobotPosition().x * 100) / 100);
-            telemetry.addData("y", Math.round(robot.drive.localizer.getRobotPosition().y * 100) / 100);
+            localizer.update();
+            hardware.bulk.clearCache(Enums.Hubs.ALL);
 
+            hardware.telemetry.addData("x", Math.round(localizer.getRobotPosition().x * 100) / 100);
+            hardware.telemetry.addData("y", Math.round(localizer.getRobotPosition().y * 100) / 100);
 
-
-            telemetry.addData("heading (deg)", Math.toDegrees(robot.drive.localizer.getAngle(AngleUnit.RADIANS)));
-            telemetry.update();
-
-            TelemetryPacket packet = new TelemetryPacket();
-            packet.fieldOverlay().setStroke("#3F51B5");
-
-            FtcDashboard.getInstance().sendTelemetryPacket(packet);
-            }
+            hardware.telemetry.addData("heading (deg)", Math.toDegrees(localizer.getAngle(AngleUnit.RADIANS)));
+            hardware.telemetry.update();
+        }
 
     }
 }

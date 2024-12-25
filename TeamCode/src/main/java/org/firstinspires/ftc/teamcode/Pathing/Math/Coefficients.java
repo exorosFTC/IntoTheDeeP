@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.Pathing.Math;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Pathing.Exceptions.NotAPolynomialException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,13 +9,13 @@ public class Coefficients extends Point implements Enums.Pathing {
     private List<Double> coefficients = new ArrayList<>();
     private Polynomial polynomialPolynomial = Polynomial.UNDEFINED;
 
-    public Coefficients (List<Double> desiredCoefficient) throws NotAPolynomialException {
+    public Coefficients (List<Double> desiredCoefficient) {
         for (int i = 0; i < desiredCoefficient.size(); i++) {
             coefficients.add(desiredCoefficient.get(i));
         }
 
         if (coefficients.size() == 0) {
-            throw new NotAPolynomialException("you can't pass no coefficients");
+            polynomialPolynomial = Polynomial.UNDEFINED;
         } else {
             if (coefficients.size() == 1) { polynomialPolynomial = Polynomial.constant; }
             else if (coefficients.size() == 2) { polynomialPolynomial = Polynomial.linear; }
@@ -27,7 +26,7 @@ public class Coefficients extends Point implements Enums.Pathing {
             else polynomialPolynomial = Polynomial.MULTIPLE;
         }
 
-        if (coefficients.get(0) == 0) { throw new NotAPolynomialException("first coefficient can't be 0"); }
+        if (coefficients.get(0) == 0) { polynomialPolynomial = Polynomial.UNDEFINED; }
     }
 
     public Polynomial getPolynomialType() { return polynomialPolynomial; }

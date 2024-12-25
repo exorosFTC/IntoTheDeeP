@@ -57,7 +57,7 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
             //try { Thread.sleep(100); } catch (InterruptedException e) {}
 
             outtake.setArmAction(ArmAction.PRE_SCORE);
-            hardware.servos.get(OuttakeWrist).setPosition(0.2);
+            hardware.servos.get(OuttakeWrist).setPosition(0.38);
             intake.setAction(IntakeAction.TRANSFER);
 
 

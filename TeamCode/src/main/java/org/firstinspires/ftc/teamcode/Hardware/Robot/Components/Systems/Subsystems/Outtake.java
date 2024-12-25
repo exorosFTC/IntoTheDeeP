@@ -14,6 +14,7 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Out
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeExtension;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeLeftPivot;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeRightPivot;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeRotation;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeWrist;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightOuttakeMotor;
 
@@ -39,13 +40,17 @@ public class Outtake implements Enums.OuttakeEnums {
     public final TwoMotorLift extension;
 
     private static final double
-            clawTransferOpen = 0.56,
-            clawFullyOpen = 0.55,
+            clawTransferOpen = 0.57,
+            clawFullyOpen = 0.50,
             clawClosed = 0.68;
 
     private static final double
-            armTransfer = 0.0,
+            armTransfer = 0.02,
             armScore = 0.85;
+
+    private static final double
+            rotationTransfer = 0.16,
+            rotationSpecimen = 0.71;
 
     private static final double
             extendoTransfer = 0.32,
@@ -54,9 +59,9 @@ public class Outtake implements Enums.OuttakeEnums {
 
 
     private static final double
-            wristTransfer = 0.74,
-            wristScoreSpecimens = 0.58,
-            wristScoreSamples = 0.66;
+            wristTransfer = 0.875,
+            wristScoreSpecimens = 0.72,
+            wristScoreSamples = 0.80;
 
     private static final double // mm
             inverseMIN = 0,
@@ -114,6 +119,7 @@ public class Outtake implements Enums.OuttakeEnums {
 
                 hardware.servos.get(OuttakeClaw).getController().close();
                 hardware.servos.get(OuttakeWrist).getController().close();
+                hardware.servos.get(OuttakeRotation).getController().close();
                 hardware.servos.get(OuttakeExtension).getController().close();
             } break;
 
@@ -139,6 +145,7 @@ public class Outtake implements Enums.OuttakeEnums {
                 }
 
                 hardware.servos.get(OuttakeClaw).setPosition(clawFullyOpen);
+                hardware.servos.get(OuttakeRotation).setPosition(rotationTransfer);
 
             } break;
 
@@ -147,6 +154,8 @@ public class Outtake implements Enums.OuttakeEnums {
             } break;
 
             case PRE_TRANSFER: {
+                hardware.servos.get(OuttakeRotation).setPosition(rotationTransfer);
+
                 hardware.servos.get(OuttakeLeftPivot).setPosition(armTransfer);
                 hardware.servos.get(OuttakeRightPivot).setPosition(armTransfer);
 
@@ -157,6 +166,8 @@ public class Outtake implements Enums.OuttakeEnums {
             } break;
 
             case TRANSFER: {
+                hardware.servos.get(OuttakeRotation).setPosition(rotationTransfer);
+
                 double distance_sensorToSample = hardware.distance.get(OuttakeDistance).getDistance(DistanceUnit.MM);
                 inverseKinematics(distance_sensorToSample - distance_sensorToClaw);
 
@@ -220,14 +231,17 @@ public class Outtake implements Enums.OuttakeEnums {
                 setLiftAction(LiftAction.HIGH_RUNG);
                 setArmAction(ArmAction.PRE_SCORE);
 
+                hardware.servos.get(OuttakeRotation).setPosition(rotationSpecimen);
                 hardware.servos.get(OuttakeWrist).setPosition(wristScoreSpecimens);
                 hardware.servos.get(OuttakeExtension).setPosition(extendoScoreSpecimens);
+                hardware.servos.get(OuttakeClaw).setPosition(clawClosed);
             } break;
 
             case SCORE_HIGH_BASKET: {
                 setLiftAction(LiftAction.HIGH_BASKET);
                 setArmAction(ArmAction.PRE_SCORE);
 
+                hardware.servos.get(OuttakeRotation).setPosition(rotationTransfer);
                 hardware.servos.get(OuttakeWrist).setPosition(wristScoreSamples);
                 hardware.servos.get(OuttakeExtension).setPosition(extendoScoreSamples);
                 hardware.servos.get(OuttakeClaw).setPosition(clawClosed);

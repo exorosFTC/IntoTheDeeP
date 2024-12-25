@@ -18,7 +18,7 @@ public class SystemConstants {
 
     public static double extensionMultiplier = 0.8;
 
-    public static int distance_sensorToClaw = 20;
+    public static int distance_sensorToClaw = 10;
 
     public static final double rotationMin = 0;
     public static final double rotationMax = 0.65;

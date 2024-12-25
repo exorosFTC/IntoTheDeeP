@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.Pathing.Math;
 
-import org.firstinspires.ftc.teamcode.Pathing.Exceptions.NotAPolynomialException;
-
 import java.util.Arrays;
 
 import javax.annotation.Nullable;
@@ -47,7 +45,7 @@ public class MathFormulas {
 
     public static double sign(double value) { return (value < 0) ? -1 : 1; }
 
-    public static Coefficients findLinearFunction(Point point1, Point point2) throws NotAPolynomialException {
+    public static Coefficients findLinearFunction(Point point1, Point point2) {
         Double a = new Double(( point1.y - point2.y ) / ( point1.x - point2.x) );
         Double b = new Double(point1.y - a * point1.x);
 
