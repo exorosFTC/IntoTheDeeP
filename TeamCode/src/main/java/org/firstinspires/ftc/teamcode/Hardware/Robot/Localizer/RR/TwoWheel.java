@@ -8,6 +8,7 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_Y_MULTIPLIER;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.forward;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.perpendicular;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftBack;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOdometry;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.PerpendicularOdometry;
 import static org.firstinspires.ftc.teamcode.Pathing.Math.Transformations.toCustomPose;
@@ -53,7 +54,7 @@ public class TwoWheel extends TwoTrackingWheelLocalizer implements Localizer {
 
         super(Arrays.asList(
                 new Pose2d(toIN(forward.x), toIN(forward.y), 0),
-                new Pose2d(toIN(perpendicular.x), toIN(perpendicular.y), Math.toRadians(90))
+                new Pose2d(toIN(perpendicular.x), toIN(perpendicular.y), Math.toRadians(-90))
         ));
 
         hardware = Hardware.getInstance(opMode);
@@ -61,8 +62,8 @@ public class TwoWheel extends TwoTrackingWheelLocalizer implements Localizer {
         parallelEncoder = new Encoder(hardware.motors.get(LeftOdometry));
         perpendicularEncoder = new Encoder(hardware.motors.get(PerpendicularOdometry));
 
-        parallelEncoder.setDirection(Encoder.Direction.REVERSE);
-        perpendicularEncoder.setDirection(Encoder.Direction.REVERSE);
+        parallelEncoder.setDirection(Encoder.Direction.FORWARD);
+        perpendicularEncoder.setDirection(Encoder.Direction.FORWARD);
 
         imu = new Threaded_IMU(opMode);
     }

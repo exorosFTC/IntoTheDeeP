@@ -26,6 +26,10 @@ public class Pose extends Point {
         return new Pose(this.x + other.x, this.y + other.y, AngleUnit.normalizeRadians(this.heading + other.heading));
     }
 
+    public Pose sum(Point other) {
+        return new Pose(this.x + other.x, this.y + other.y, this.heading);
+    }
+
     //......................................................................
 
     public Pose subtract(Pose other) {
@@ -67,7 +71,7 @@ public class Pose extends Point {
                 Math.abs(heading) <= threshold;
     }
 
-    public Point getPoint() { return new Point(x, y); }
+    public Point point() { return new Point(x, y); }
 
     //......................................................................
 }

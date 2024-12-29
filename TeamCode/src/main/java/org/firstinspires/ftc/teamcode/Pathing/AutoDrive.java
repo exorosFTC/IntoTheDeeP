@@ -10,8 +10,10 @@ import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
+import org.firstinspires.ftc.teamcode.Hardware.OpenCV.Camera;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.ScorringSystem;
@@ -22,10 +24,11 @@ import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 import java.util.concurrent.TimeUnit;
 
-public class AutoBase {
+public class AutoDrive {
     /**CHANGE THESE 2 WITH YOUR SPECIFIC HARDWARE CLASSES*/
     private final Drivetrain drive;
     private final ScorringSystem system;
+    private final Camera camera;
 
 
 
@@ -38,15 +41,23 @@ public class AutoBase {
     private final Localizer localizer;
 
     private final PIDController linearC, angularC;
-    private double busyThreshold = 0.12;
+    private double busyThreshold = 0.08;
 
     private Pose target = new Pose();
     private Pose driveVector = new Pose();
 
+    private boolean isPaused = false;
+    private boolean previousIsPaused = false;
 
 
 
-    public AutoBase(LinearOpMode opMode, Machine robot) {
+
+    public AutoDrive(LinearOpMode opMode, Machine robot) {
+        if (SystemConstants.usingOpenCvCamera) {
+            this.camera = new Camera(opMode, robot.hardware.telemetry);
+            camera.setPipeline(Enums.Pipelines.DETECTING_SAMPLE);
+        } else camera = null;
+
         this.drive = robot.drive;
         this.system = robot.system;
 
@@ -66,25 +77,34 @@ public class AutoBase {
     private void startDriveThread() {
         driveThread = new Thread(() -> {
             while (opMode.opModeIsActive()) {
+                updateLiftPID();
+                localizer.update();
+                hardware.bulk.clearCache(Enums.Hubs.ALL);
+
+                if (isPaused && !previousIsPaused) {    // stop the robot when paused
+                    drive.update(new Pose());
+                    previousIsPaused = true;
+                    continue;
+                }
+
+                if (isPaused) continue;
 
                 Pose currentPose = localizer.getRobotPosition();
+                double radians = Math.toRadians(currentPose.heading);
+
                 driveVector = new Pose(
                         linearC.calculate(currentPose.x, target.x),
                         linearC.calculate(currentPose.y, target.y),
                         0);
-                Point rotatedDiff = new Point(driveVector.x, driveVector.y).rotate_matrix(-Math.toRadians(currentPose.heading));
+                Point rotatedDiff = driveVector.point().rotate_matrix(-radians);
 
                 driveVector = new Pose(
                         rotatedDiff.x,
                         -rotatedDiff.y,
-                        angularC.calculate(-FindShortestPath(Math.toRadians(currentPose.heading), target.heading)));
+                        angularC.calculate(-FindShortestPath(radians, target.heading)));
 
 
                 drive.update(driveVector.multiplyBy(12 / hardware.batteryVoltageSensor.getVoltage()));
-                localizer.update();
-                updateLiftPID();
-
-                hardware.bulk.clearCache(Enums.Hubs.ALL);
             }
         });
 
@@ -94,38 +114,63 @@ public class AutoBase {
 
 
 
-    public AutoBase driveTo(Pose pose) {
+    public AutoDrive pause() {
+        isPaused = true;
+        return this;
+    }
+
+    public AutoDrive resume() {
+        isPaused = false;
+        previousIsPaused = false;
+        return this;
+    }
+
+    public AutoDrive driveTo(Pose pose) {
         this.target = pose;
         return this;
     }
 
-    public AutoBase waitDrive() {
+    public AutoDrive waitDrive() {
         while (isBusy() && opMode.opModeIsActive()) { opMode.idle(); }
         return this;
     }
 
-    public AutoBase waitMs(double ms) {
+    public AutoDrive waitMs(double ms) {
         waitTimer.reset();
         while (waitTimer.time(TimeUnit.MILLISECONDS) <= ms && opMode.opModeIsActive()) { opMode.idle(); }
         return this;
     }
 
-    public AutoBase moveSystem(Runnable action) {
+    public AutoDrive moveSystem(Runnable action) {
         if (action != null) action.run();
         return this;
     }
 
-    public AutoBase setBusyThreshold(double threshold) {
+    public AutoDrive setBusyThreshold(double threshold) {
         this.busyThreshold = threshold;
         return this;
     }
 
-    public AutoBase setPose(Pose pose) {
+    public AutoDrive setPose(Pose pose) {
         localizer.setPositionEstimate(pose);
         return this;
     }
 
-    public AutoBase end() {
+    public AutoDrive alignToSample() {
+        if (camera == null) return this;
+
+        Point error = camera.getSampleCenterError();
+
+        Point rotatedError = error
+                .rotate_matrix(-Math.toRadians(system.intake.getRotationAngle()))       // intake rotation offset
+                .rotate_matrix(-Math.toRadians(localizer.getRobotPosition().heading));  // robot heading offset
+
+        target = target.sum(rotatedError);
+
+        return this;
+    }
+
+    public AutoDrive end() {
         driveThread.interrupt();
         drive.disable();
         return this;
@@ -133,13 +178,13 @@ public class AutoBase {
 
 
 
+
+
     public void setLinearPID(double p, double i, double d) { linearC.setPID(p, i, d); }
 
     public void setAngularPID(double p, double i, double d) { angularC.setPID(p, i, d); }
 
-    public boolean isBusy() {
-        return !driveVector.closeToZero(busyThreshold);
-    }
+    public boolean isBusy() { return !driveVector.closeToZero(busyThreshold); }
 
     private void updateLiftPID() { system.outtake.extension.update(); }
 

@@ -11,7 +11,8 @@ public interface Enums {
     }
 
     enum Pipelines{
-        DETECTING_PROP
+        DETECTING_PROP,
+        DETECTING_SAMPLE
     }
 
     enum Randomization{
@@ -104,7 +105,7 @@ public interface Enums {
             FULL(outtakeMAX),
 
             HIGH_BASKET(1480),
-            HIGH_RUNG(290),
+            HIGH_RUNG(330),
             LOW_BASKET(0), // we don't do that here
             LOW_RUNG(0); // neither this
 

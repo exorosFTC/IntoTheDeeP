@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemC
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeV4B;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftBack;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftFront;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeRotation;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeWrist;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightBack;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightFront;
@@ -40,7 +41,7 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
     public void transfer() {
             outtake.setAction(OuttakeAction.TRANSFER);
 
-            //try { Thread.sleep(100); } catch (InterruptedException e) {}
+            //try { Thread.sleep(1000); } catch (InterruptedException e) {}
 
             intake.openClawTransfer(true);
             //intake.extendPosition(IntakePosition.IN_TRANSFER);
@@ -58,7 +59,12 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
 
             outtake.setArmAction(ArmAction.PRE_SCORE);
             hardware.servos.get(OuttakeWrist).setPosition(0.38);
+
+            timer.reset();
+            while (opMode.opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) <= 150) { opMode.idle(); }
+
             intake.setAction(IntakeAction.TRANSFER);
+
 
 
             //intake.setAction(IntakeAction.DISABLE);

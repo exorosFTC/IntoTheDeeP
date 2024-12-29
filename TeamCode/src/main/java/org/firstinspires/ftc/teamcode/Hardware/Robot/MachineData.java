@@ -10,7 +10,6 @@ public class MachineData implements Enums, Enums.Mecanum {
 
     public Localizers localizer = Localizers.TWO_WHEELS;
     public OpMode opModeType;
-    public MotionPackage motionPackage = MotionPackage.ROADRUNNER;
 
     public GamepadKeys.Button sensitivityButton = null;
     public GamepadKeys.Trigger sensitivityTrigger = null;
@@ -27,8 +26,8 @@ public class MachineData implements Enums, Enums.Mecanum {
         return this;
     }
 
-    public MachineData add(MotionPackage motionPackage) {
-        this.motionPackage = motionPackage;
+    public MachineData add (Color detectionColor) {
+        SystemConstants.detectionColor = detectionColor;
         return this;
     }
 

@@ -4,28 +4,22 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.AngularP;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearD;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearP;
-import static org.firstinspires.ftc.teamcode.Pathing.Math.MathFormulas.FindShortestPath;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
-import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Systems.Drivetrain;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Machine;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.MachineData;
 import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
-import org.firstinspires.ftc.teamcode.Pathing.AutoBase;
-import org.firstinspires.ftc.teamcode.Pathing.Math.Point;
+import org.firstinspires.ftc.teamcode.Pathing.AutoDrive;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
-
-import javax.crypto.Mac;
 
 @Config
 @Autonomous(name = "MovementPIDTuner", group = "tuning")
 public class AutoTuner extends ExoMode {
     private Machine robot;
-    private AutoBase auto;
+    private AutoDrive auto;
 
     public static double linP = LinearP, angP = AngularP;
     public static double linD = LinearD, angD = AngularD;
@@ -47,7 +41,7 @@ public class AutoTuner extends ExoMode {
 
     @Override
     protected void WhenStarted() {
-        auto = new AutoBase(this, robot);
+        auto = new AutoDrive(this, robot);
     }
 
     @Override
@@ -57,7 +51,7 @@ public class AutoTuner extends ExoMode {
 
     @Override
     protected void Loop() {
-        auto.driveTo(new Pose(x, y, head));
+        auto.driveTo(new Pose(x, y, Math.toRadians(head)));
 
         auto.setLinearPID(linP, 0, linD);
         auto.setAngularPID(angP, 0, angD);

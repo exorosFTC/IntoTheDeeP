@@ -122,6 +122,7 @@ public class OneMotorLift {
         hardware.motors.get(motor).setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         hardware.motors.get(motor).setTargetPosition(0);
         hardware.motors.get(motor).setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        hardware.motors.get(motor).setPower(1);
     }
 
     public boolean constrained() {

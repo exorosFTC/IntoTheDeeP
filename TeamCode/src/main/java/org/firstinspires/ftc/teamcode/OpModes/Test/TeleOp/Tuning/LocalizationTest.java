@@ -55,7 +55,7 @@ public class LocalizationTest extends LinearOpMode {
             hardware.telemetry.addData("x", Math.round(localizer.getRobotPosition().x * 100) / 100);
             hardware.telemetry.addData("y", Math.round(localizer.getRobotPosition().y * 100) / 100);
 
-            hardware.telemetry.addData("heading (deg)", Math.toDegrees(localizer.getAngle(AngleUnit.RADIANS)));
+            hardware.telemetry.addData("heading (deg)", localizer.getRobotPosition().heading);
             hardware.telemetry.update();
         }
 

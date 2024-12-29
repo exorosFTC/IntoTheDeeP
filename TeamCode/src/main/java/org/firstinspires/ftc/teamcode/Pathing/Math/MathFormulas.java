@@ -52,6 +52,14 @@ public class MathFormulas {
         return new Coefficients(Arrays.asList(a, b));
     }
 
+    /** clips the angle in the [0, 360) range */
+    public static double normalizeDeg(double deg) {
+        while (deg >= 360) deg -= 360;
+        while (deg < 0) deg += 360;
+
+        return deg;
+    }
+
 
 
 

@@ -16,7 +16,7 @@ public class MecanumConstants {
     public static double speed = fastDrive;
 
     public static final double fastTurn = 0.6;
-    public static final double slowTurn = 0.42;
+    public static final double slowTurn = 0.37;
 
     public static double accelerationScalar = 0.03;
     public static final double accelerationLiftExtended = 0.03;

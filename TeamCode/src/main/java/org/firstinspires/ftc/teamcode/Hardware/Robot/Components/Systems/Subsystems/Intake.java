@@ -7,7 +7,10 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemC
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.inIntakeThreshold;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.red;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.rotationMax;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.rotationMaxDeg;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.rotationMin;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.rotationRange;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.rotationRangeDeg;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.v4bSafeDropdown;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.yellow;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.driveSensitivity;
@@ -17,11 +20,13 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Int
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeMotor;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeRotation;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeV4B;
+import static org.firstinspires.ftc.teamcode.Pathing.Math.MathFormulas.normalizeDeg;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
@@ -43,17 +48,17 @@ public class Intake implements Enums, Enums.IntakeEnums {
     private boolean currentTouch = false, lastTouch = false;
 
     private static final double
-            clawTransferOpen = 0.35,
-            clawCollectOpen = 0.32,
-            clawClosed = 0.79;
+            clawTransferOpen = 0.42,
+            clawCollectOpen = 0.42,
+            clawClosed = 0.72;
 
     private static final double
             v4bTransfer = 0.19,
             v4bPreCollect = 0.67,
-            v4bCollect = 0.825;
+            v4bCollect = 0.87;
 
     private static final double
-            rotationTransfer = 0.1;
+            rotationTransfer = 0.12;
 
 
 
@@ -104,22 +109,27 @@ public class Intake implements Enums, Enums.IntakeEnums {
                     break;
 
                 if (hasGameElement()) {
-                    setAction(IntakeAction.TRANSFER);
                     hardware.servos.get(IntakeClaw).setPosition(clawCollectOpen);
                     break;
                 }
 
                 hardware.servos.get(IntakeV4B).setPosition(v4bCollect);
-                try { Thread.sleep(150); } catch (InterruptedException e) {}
+                try { Thread.sleep(100); } catch (InterruptedException e) {}
 
                 hardware.servos.get(IntakeClaw).setPosition(clawClosed);
-                try { Thread.sleep(250); } catch (InterruptedException e) {}
+                try { Thread.sleep(200); } catch (InterruptedException e) {}
 
                 if (checkIntakeCatch()) {
-                    hardware.servos.get(IntakeRotation).setPosition(rotationTransfer);
-                    hardware.servos.get(IntakeV4B).setPosition(v4bTransfer);
+                    hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
 
-                    extendUntilTouch();
+                    try { Thread.sleep(180); } catch (InterruptedException e) {}
+
+                    if (checkIntakeCatch()) {
+                        hardware.servos.get(IntakeRotation).setPosition(rotationTransfer);
+                        hardware.servos.get(IntakeV4B).setPosition(v4bTransfer);
+
+                        extendUntilTouch();
+                    } else hardware.servos.get(IntakeClaw).setPosition(clawCollectOpen);
                 } else {
                     hardware.servos.get(IntakeClaw).setPosition(clawCollectOpen);
                     hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
@@ -140,10 +150,15 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
     public void extend(double power) {
         lastTouch = currentTouch;
+        hardware.bulk.clearCache(Hubs.ALL);
         currentTouch = hardware.touch.get(IntakeExtensionTouch).isPressed();
+
+        hardware.telemetry.addData("last", lastTouch);
+        hardware.telemetry.addData("current", currentTouch);
+
         if (!(currentTouch && power < 0))
             extension.extend(power);
-        else if (currentTouch && !lastTouch) {
+        if (currentTouch && !lastTouch) {
             extension.resetEncoders();
         }
 
@@ -160,7 +175,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
     public void extendPosition(IntakePosition position) { extension.setPosition(position.name()); }
 
     public void extendUntilTouch() {
-        extendUntilTouch(1500);
+        extendUntilTouch(1000);
     }
 
     public void extendUntilTouch(int ms) {
@@ -188,11 +203,11 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
             double diff = (exponential) ? (exponential(right) - exponential(left)) : (right - left);
             double position = hardware.servos.get(IntakeRotation).getPosition()
-                    +
-                    diff * sensitivity;
+                                                +
+                                        diff * sensitivity;
 
-            double clipped_position = Math.max(rotationMin, Math.min(rotationMax, position));
-            hardware.servos.get(IntakeRotation).setPosition(clipped_position);
+            double wrapped_position = Math.max(rotationMin, Math.min(rotationMax, position));
+            hardware.servos.get(IntakeRotation).setPosition(wrapped_position);
         }
     }
 
@@ -221,10 +236,11 @@ public class Intake implements Enums, Enums.IntakeEnums {
                 hardware.color.get(IntakeColor).green(),
                 hardware.color.get(IntakeColor).blue());
 
-
         if ((SystemConstants.autoOnBlue && checkColor(input) != Color.RED)
                                         ||
-                (!SystemConstants.autoOnBlue && checkColor(input) != Color.BLUE))
+                (!SystemConstants.autoOnBlue && checkColor(input) != Color.BLUE)
+                                        ||
+                checkColor(input) == Color.YELLOW)
             return true;
 
         return false;
@@ -248,9 +264,21 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
     public double getCurrent() { return  hardware.motors.get(IntakeMotor).getCurrent(CurrentUnit.AMPS); }
 
+    public double getRotationAngle() {
+        double addition = hardware.servos.get(IntakeRotation).getPosition() - rotationMin;
+        double additionDeg = addition / rotationRange * rotationRangeDeg;
+
+        return normalizeDeg(rotationMaxDeg + additionDeg);
+    }
+
+
+
     public boolean hasJustChangedTo(IntakeAction action) { return action == currentAction && action != previousAction; }
 
-    public boolean hasGameElement() { return hardware.color.get(IntakeColor).getDistance(DistanceUnit.MM) <= inIntakeThreshold; }
+    public boolean hasGameElement() {
+        double distance = hardware.color.get(IntakeColor).getDistance(DistanceUnit.MM);
+
+        return distance <= inIntakeThreshold && distance > 22; }
 
     public boolean isOverCurrent() { return hardware.motors.get(IntakeMotor).isOverCurrent(); }
 }

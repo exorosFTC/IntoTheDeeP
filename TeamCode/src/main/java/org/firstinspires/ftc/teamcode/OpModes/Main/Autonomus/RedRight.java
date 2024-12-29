@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Machine;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.MachineData;
 import org.firstinspires.ftc.teamcode.OpModes.ExoMode;
-import org.firstinspires.ftc.teamcode.Pathing.AutoBase;
+import org.firstinspires.ftc.teamcode.Pathing.AutoDrive;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 @Autonomous(group = "aa_main", preselectTeleOp = "🍓")
@@ -34,7 +34,7 @@ public class RedRight extends ExoMode {
 
     @Override
     protected void WhenStarted() {
-        AutoBase auto = new AutoBase(this, robot)
+        AutoDrive auto = new AutoDrive(this, robot)
                 // score the pre-loaded specimen
                     .moveSystem(() -> robot.system.outtake.openClaw(false))
                 .driveTo(new Pose(23, -5, Math.toRadians(180)))
