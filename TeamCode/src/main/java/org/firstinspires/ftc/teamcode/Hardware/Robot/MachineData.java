@@ -7,22 +7,13 @@ import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstant
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 
 public class MachineData implements Enums, Enums.Mecanum {
-
-    public Localizers localizer = Localizers.TWO_WHEELS;
-    public OpMode opModeType;
-
     public GamepadKeys.Button sensitivityButton = null;
     public GamepadKeys.Trigger sensitivityTrigger = null;
 
 
 
-    public MachineData add(Localizers localizer) {
-        this.localizer = localizer;
-        return this;
-    }
-
     public MachineData add(OpMode opModeType) {
-        this.opModeType = opModeType;
+        SystemConstants.opModeType = opModeType;
         return this;
     }
 

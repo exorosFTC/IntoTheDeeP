@@ -26,7 +26,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.checkerframework.checker.units.qual.A;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
@@ -46,16 +45,18 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
     private boolean isIntakeAccessible = true;
     private boolean currentTouch = false, lastTouch = false;
+    private boolean isDown = false;
 
     private static final double
-            clawTransferOpen = 0.42,
-            clawCollectOpen = 0.42,
-            clawClosed = 0.72;
+            clawTransferOpen = 0.45,
+            clawCollectOpen = 0.45,
+            clawClosed = 0.67;
 
     private static final double
             v4bTransfer = 0.19,
             v4bPreCollect = 0.67,
-            v4bCollect = 0.87;
+            v4bCollectClose = 0.865,
+            v4bCollectFar = 0.8;
 
     private static final double
             rotationTransfer = 0.12;
@@ -85,8 +86,8 @@ public class Intake implements Enums, Enums.IntakeEnums {
     public void setAction(IntakeAction action) {
         switch (action){
             case DISABLE: {
+                // same controller for like all the servos
                 hardware.servos.get(IntakeClaw).getController().close();
-                hardware.servos.get(IntakeRotation).getController().close();
             } break;
 
             case TRANSFER: {
@@ -105,7 +106,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
             } break;
 
             case COLLECT: {
-                if (extension.getPosition() < v4bSafeDropdown || previousAction == IntakeAction.COLLECT)
+                if ((extension.getPosition() < v4bSafeDropdown || previousAction == IntakeAction.COLLECT) && !isDown)
                     break;
 
                 if (hasGameElement()) {
@@ -113,8 +114,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
                     break;
                 }
 
-                hardware.servos.get(IntakeV4B).setPosition(v4bCollect);
-                try { Thread.sleep(100); } catch (InterruptedException e) {}
+                if (SystemConstants.opModeType == OpMode.AUTONOMUS) { calculateV4b(); }
 
                 hardware.servos.get(IntakeClaw).setPosition(clawClosed);
                 try { Thread.sleep(200); } catch (InterruptedException e) {}
@@ -134,6 +134,8 @@ public class Intake implements Enums, Enums.IntakeEnums {
                     hardware.servos.get(IntakeClaw).setPosition(clawCollectOpen);
                     hardware.servos.get(IntakeV4B).setPosition(v4bPreCollect);
                 }
+
+                isDown = false;
             } break;
         }
 
@@ -153,8 +155,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
         hardware.bulk.clearCache(Hubs.ALL);
         currentTouch = hardware.touch.get(IntakeExtensionTouch).isPressed();
 
-        hardware.telemetry.addData("last", lastTouch);
-        hardware.telemetry.addData("current", currentTouch);
+        if  (isDown && power != 0) { calculateV4b(); }
 
         if (!(currentTouch && power < 0))
             extension.extend(power);
@@ -162,11 +163,13 @@ public class Intake implements Enums, Enums.IntakeEnums {
             extension.resetEncoders();
         }
 
+
+
         if (extension.getPosition() > v4bSafeDropdown && previousAction != IntakeAction.PRE_COLLECT) {
             driveSensitivity = slowTurn;
             setAction(IntakeAction.PRE_COLLECT);
         }
-        else if (extension.getPosition() < v4bSafeDropdown && previousAction != IntakeAction.TRANSFER) {
+        else if (extension.getPosition() < v4bSafeDropdown && previousAction != IntakeAction.TRANSFER && !isDown) {
             driveSensitivity = fastTurn;
             setAction(IntakeAction.TRANSFER);
         }
@@ -256,6 +259,11 @@ public class Intake implements Enums, Enums.IntakeEnums {
         return Color.NONE;
     }
 
+    public void lowerV4B() {
+        calculateV4b();
+        isDown = true;
+    }
+
 
 
     public IntakeAction getAction() { return currentAction; }
@@ -269,6 +277,15 @@ public class Intake implements Enums, Enums.IntakeEnums {
         double additionDeg = addition / rotationRange * rotationRangeDeg;
 
         return normalizeDeg(rotationMaxDeg + additionDeg);
+    }
+
+
+
+    public boolean isV4bDown() { return isDown; }
+
+    private void calculateV4b() {
+        double position = v4bCollectClose - (v4bCollectClose - v4bCollectFar) * (extendoMAX - extension.getPosition());
+        hardware.servos.get(IntakeV4B).setPosition(position);
     }
 
 

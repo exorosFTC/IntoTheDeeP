@@ -38,7 +38,7 @@ private static int index = 0;
         g1 = new GamepadEx(gamepad1);
         dashboardTelemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        servo = hardwareMap.get(Servo.class, "servo");
+        servo = hardwareMap.get(Servo.class, ServoNamesList.get(index));
 
         waitForStart();
 
@@ -50,7 +50,7 @@ private static int index = 0;
                 if (index == ServoNamesList.size())
                     index = 0;
 
-                //servo = hardwareMap.get(Servo.class, ServoNamesList.get(index));
+                servo = hardwareMap.get(Servo.class, ServoNamesList.get(index));
 
             }
 
@@ -58,14 +58,12 @@ private static int index = 0;
                 position -= increment;
 
                 position = Range.clip(position, 0, 1);
-                servo.getController().pwmDisable();
                 servo.setPosition(position);
             }
             else if (g1.wasJustPressed(GamepadKeys.Button.DPAD_UP)) {
                 position += increment;
 
                 position = Range.clip(position, 0, 1);
-                servo.getController().pwmDisable();
                 servo.setPosition(position);
             }
 

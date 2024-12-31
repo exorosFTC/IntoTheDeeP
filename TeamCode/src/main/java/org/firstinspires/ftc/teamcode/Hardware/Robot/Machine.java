@@ -23,6 +23,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.apache.commons.math3.geometry.euclidean.twod.Line;
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
 import org.firstinspires.ftc.teamcode.Hardware.OpenCV.AprilTagCamera;
@@ -118,7 +119,7 @@ public class Machine {
         if (data.sensitivityTrigger == null && data.sensitivityButton == null)
             usingDriveSensitivity = false;
 
-        if (data.opModeType != Enums.OpMode.AUTONOMUS)
+        if (SystemConstants.opModeType != Enums.OpMode.AUTONOMUS)
             createG1Thread();
 
         return this;
@@ -182,7 +183,6 @@ public class Machine {
     }
 
     private void updateGamepad() {
-        //if (g1 != null) g1.readButtons();
         if (g2 != null) g2.readButtons();
     }
 
@@ -190,16 +190,10 @@ public class Machine {
 
 
     public void updateSystem() {
-        if (data.opModeType == Enums.OpMode.TELE_OP) {
-            updateGamepad();
-            updateDriveSensitivity();
-        }
+        updateGamepad();
+        updateDriveSensitivity();
         system.update();
 
-    }
-
-    public double exp(double x) {
-        return x * x * x;
     }
 
 
@@ -240,15 +234,13 @@ public class Machine {
 
 
     public void initComplete() {
-        if (hardware.telemetry != null) {
-            hardware.telemetry.addLine("INIT COMPLETE! KILL EM' ALL 😈");
-            hardware.telemetry.update();
-        }
+        hardware.telemetry.addLine("INIT COMPLETE! KILL EM' ALL 😈");
+        hardware.telemetry.update();
     }
 
-    public void addTelemetry(String caption, Object value) { if (hardware.telemetry != null) hardware.telemetry.addData(caption, value); }
+    public void addTelemetry(String caption, Object value) { hardware.telemetry.addData(caption, value); }
 
-    public void clearTelemetry() { if (hardware.telemetry != null) hardware.telemetry.clearAll(); }
+    public void clearTelemetry() { hardware.telemetry.clearAll(); }
 
     public void updateTelemetry() {
         if (telemetryAddLoopTime) {

@@ -54,9 +54,9 @@ public class Outtake implements Enums.OuttakeEnums {
             rotationSpecimen = 0.72;
 
     private static final double
-            extendoTransfer = 0.32,
-            extendoScoreSamples = 0.85,
-            extendoScoreSpecimens = 0.3;
+            extendoTransfer = 0.85,
+            extendoScoreSamples = 0.45,
+            extendoScoreSpecimens = 0.87;
 
 
     private static final double
@@ -316,7 +316,7 @@ public class Outtake implements Enums.OuttakeEnums {
         double dtheta1 = Math.acos((target * target - r * r - R * R) / (-2 * r * R));
 
         double theta1 = armTransfer + Math.toDegrees(dtheta1) * armScore / 153;
-        double theta2 = extendoTransfer + dl * (extendoScoreSamples - extendoTransfer) / 106;
+        double theta2 = extendoTransfer - (dl + 20) * (extendoTransfer - extendoScoreSamples) / 106;
         double theta3 = wristTransfer - j1GearRatio * theta1;
 
         moveKinematics(theta1, theta2, theta3);

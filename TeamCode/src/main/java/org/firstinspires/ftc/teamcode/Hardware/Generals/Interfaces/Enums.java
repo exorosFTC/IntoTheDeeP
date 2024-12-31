@@ -31,11 +31,6 @@ public interface Enums {
         OUTTAKE
     }
 
-    enum Telemetry{
-        DASHBOARD,
-        REGULAR
-    }
-
     enum Gamepads{
         G1, G2,
         BOTH,
@@ -54,19 +49,6 @@ public interface Enums {
     interface Pathing{
         enum Polynomial{
             UNDEFINED, constant, linear, quadratic, cubic, quartic, quintic, MULTIPLE
-        }
-    }
-
-    interface Mecanum {
-        enum MotionPackage {
-            ROADRUNNER,
-            CUSTOM,
-            PID
-        }
-
-        enum Localizers {
-            THREE_WHEELS,
-            TWO_WHEELS
         }
     }
 
