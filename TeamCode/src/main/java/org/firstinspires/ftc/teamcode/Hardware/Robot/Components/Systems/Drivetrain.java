@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.accelerationScalar;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingAcceleration;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.usingExponentialInput;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.opModeType;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.FrontUltrasonic;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftBack;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftFront;
@@ -13,8 +14,10 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Rig
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.RightUltrasonic;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Util.SensorsEx.UltrasonicSensor;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
@@ -38,6 +41,13 @@ public class Drivetrain {
         right = new UltrasonicSensor(opMode, hardware.analog.get(RightUltrasonic));
         front = new UltrasonicSensor(opMode, hardware.analog.get(FrontUltrasonic));
 
+        if (opModeType == Enums.OpMode.AUTONOMUS) {
+            hardware.motors.get(LeftFront).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            hardware.motors.get(LeftBack).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            hardware.motors.get(RightFront).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            hardware.motors.get(RightBack).setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+
         this.opMode = opMode;
     }
 
@@ -57,6 +67,11 @@ public class Drivetrain {
         RF = x + y + head * TRACK_WIDTH;
         LB = x + y - head * TRACK_WIDTH;
         RB = x - y + head * TRACK_WIDTH;
+
+        if (Math.abs(LF) < 0.05) LF = 0;
+        if (Math.abs(RF) < 0.05) RF = 0;
+        if (Math.abs(RB) < 0.05) RB = 0;
+        if (Math.abs(LB) < 0.05) LB = 0;
 
         hardware.motors.get(LeftFront).setPower(LF);
         hardware.motors.get(LeftBack).setPower(LB);

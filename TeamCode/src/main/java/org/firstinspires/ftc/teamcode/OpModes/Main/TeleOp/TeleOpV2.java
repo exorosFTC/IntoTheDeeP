@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes.Main.TeleOp;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeExtensionMotor;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeMotor;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeTurret;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOuttakeMotor;
 
@@ -97,9 +98,12 @@ public class TeleOpV2 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
 
         robot.initComplete();
 
+
         robot.system.intake.manual = true;
         robot.system.outtake.manual = false;
+
         SystemConstants.updateOuttake = false;
+        SystemConstants.extendoMAX = 670;
     }
 
     @Override
@@ -130,6 +134,7 @@ public class TeleOpV2 extends ExoMode implements Enums.IntakeEnums, Enums.Outtak
 
         robot.hardware.telemetry.addData("Outtake AMPS", robot.hardware.motors.get(LeftOuttakeMotor).getCurrent(CurrentUnit.AMPS));
         robot.hardware.telemetry.addData("Intake AMPS", robot.hardware.motors.get(IntakeExtensionMotor).getCurrent(CurrentUnit.AMPS));
+        robot.hardware.telemetry.addData("Collection Motor AMPS", robot.hardware.motors.get(IntakeMotor).getCurrent(CurrentUnit.AMPS));
         robot.hardware.telemetry.addData("update out: ", SystemConstants.updateOuttake);
 
         robot.hardware.telemetry.addData("Intake pose:", robot.system.intake.extension.getPosition());

@@ -13,11 +13,8 @@ public class MecanumConstants {
     public static double accelerationScalar = 0.08;
 
 
-    public static final Pose basketPose = new Pose(4, -14.6, Math.toRadians(45));
+    public static final Pose basketPose = new Pose(3.1, 16.6, Math.toRadians(360 - 55));
 
-    // Inch
-    public static final double leftWallDistanceBasket = 0;
-    public static final double rightWallDistanceBasket = 0;
 
     public static double driveSensitivity = 0.6;
 
@@ -26,12 +23,12 @@ public class MecanumConstants {
     public static final double AngularP = 0.3,
                         AngularD = 0.02;
 
-    public static final double UltraLinearP = 0.1,
-                        UltraLinearD = 0.000000004;
 
     // ODOMETRY CONSTANTS
     public static final double ODOMETRY_TICKS_PER_REVOLUTION = 2000;
     public static final double ODOMETRY_WHEEL_RADIUS_CM = 3.2;
+
+    public static double ahhX = 2000, ahhY = 0;
 
     public static final Point forward = new Point(2, 0.9286);       //cm
     public static final Point perpendicular = new Point(2.581, -1.7482); //cm

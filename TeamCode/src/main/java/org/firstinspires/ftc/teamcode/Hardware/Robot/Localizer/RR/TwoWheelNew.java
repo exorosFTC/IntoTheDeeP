@@ -2,14 +2,20 @@ package org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.RR;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_TICKS_PER_REVOLUTION;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ODOMETRY_WHEEL_RADIUS_CM;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ahhX;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ahhY;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.forward;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.perpendicular;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.LOGO_DIRECTION;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.USB_DIRECTION;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IMU_Name;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.LeftOdometry;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.PerpendicularOdometry;
 import static org.firstinspires.ftc.teamcode.Pathing.Math.Transformations.toCustomPose;
 import static org.firstinspires.ftc.teamcode.Pathing.Math.Transformations.toIN;
 import static org.firstinspires.ftc.teamcode.Pathing.Math.Transformations.toRoadrunnerPose;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -25,10 +31,12 @@ import com.acmerobotics.roadrunner.ftc.Encoder;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 import com.acmerobotics.roadrunner.ftc.PositionVelocityPair;
 import com.acmerobotics.roadrunner.ftc.RawEncoder;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Localizer;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Components.Hardware;
 import org.firstinspires.ftc.teamcode.Hardware.Robot.Localizer.IMU.SketchyIMU;
@@ -38,21 +46,26 @@ public class TwoWheelNew implements Localizer {
     private Hardware hardware;
     private LinearOpMode opMode;
 
-    private static double inPerTick = toIN(ODOMETRY_WHEEL_RADIUS_CM) * 2 * Math.PI / ODOMETRY_TICKS_PER_REVOLUTION;
+    private static double inPerTick = toIN(ODOMETRY_WHEEL_RADIUS_CM) * 2 * Math.PI / ODOMETRY_TICKS_PER_REVOLUTION * 40 / 89;
     private static double tickPerIn = ODOMETRY_TICKS_PER_REVOLUTION / toIN(ODOMETRY_WHEEL_RADIUS_CM) * 2 * Math.PI;
     private Pose2d pose = new Pose2d(0, 0, 0);
 
 
 
     public static class Params {
-        public double parYTicks = toIN(forward.y) * tickPerIn; // y position of the parallel encoder (in tick units)
-        public double perpXTicks = toIN(perpendicular.x) * tickPerIn; // x position of the perpendicular encoder (in tick units)
+        public double parYTicks = ahhY; // y position of the parallel encoder (in tick units)
+public double perpXTicks = ahhX; // x position of the perpendicular encoder (in tick units)
+
+        public void set(double x, double y) {
+            parYTicks = y;
+            perpXTicks = x;
+        }
     }
 
     public static Params PARAMS = new Params();
 
     public final Encoder par, perp;
-    public final SketchyIMU imu;
+    public final IMU imu;
 
     private int lastParPos, lastPerpPos;
     private Rotation2d lastHeading;
@@ -77,7 +90,9 @@ public class TwoWheelNew implements Localizer {
         // TODO: reverse encoder directions if needed
         //   par.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        this.imu = new SketchyIMU(opMode);
+        this.imu = opMode.hardwareMap.get(IMU.class,IMU_Name);
+        imu.initialize(new IMU.Parameters(
+                new RevHubOrientationOnRobot(LOGO_DIRECTION, USB_DIRECTION)));
     }
 
 
@@ -88,8 +103,12 @@ public class TwoWheelNew implements Localizer {
         PositionVelocityPair parPosVel = par.getPositionAndVelocity();
         PositionVelocityPair perpPosVel = perp.getPositionAndVelocity();
 
+        PARAMS.set(ahhX, ahhY);
 
-        AngularVelocity angularVelocityDegrees = imu.it.getRobotAngularVelocity(AngleUnit.DEGREES);
+
+        YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
+        // Use degrees here to work around https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/1070
+        AngularVelocity angularVelocityDegrees = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
         AngularVelocity angularVelocity = new AngularVelocity(
                 UnnormalizedAngleUnit.RADIANS,
                 (float) Math.toRadians(angularVelocityDegrees.xRotationRate),
@@ -98,7 +117,7 @@ public class TwoWheelNew implements Localizer {
                 angularVelocityDegrees.acquisitionTime
         );
 
-        Rotation2d heading = Rotation2d.exp(imu.getAngle(AngleUnit.RADIANS));
+        Rotation2d heading = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS));
 
         // see https://github.com/FIRST-Tech-Challenge/FtcRobotController/issues/617
         double rawHeadingVel = angularVelocity.zRotationRate;
@@ -154,5 +173,5 @@ public class TwoWheelNew implements Localizer {
     public void setPositionEstimate(Pose newPose) { pose = toRoadrunnerPose(newPose); }
 
     @Override
-    public double getAngle(AngleUnit unit) { return imu.getAngle(unit); }
+    public double getAngle(AngleUnit unit) { return toCustomPose(pose).heading; }
 }

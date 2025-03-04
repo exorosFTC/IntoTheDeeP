@@ -4,10 +4,12 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.AngularP;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearD;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearP;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.UltraLinearD;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.UltraLinearP;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ahhX;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.ahhY;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
@@ -25,11 +27,11 @@ public class PIDAutoTuner extends ExoMode {
 
     public static double linP = LinearP, angP = AngularP;
     public static double linD = LinearD, angD = AngularD;
-    public static double ultraP = UltraLinearP, ultraD = UltraLinearD;
-    public static double alignBasket = 0;
-    public static double distance = 5;
     public static double x, y, head;
-    public static double alpha = 0.03;
+
+    public static double ahX = ahhX;
+    public static double ahY = ahhY;
+    public GamepadEx g2;
 
     @Override
     protected void Init() {
@@ -43,6 +45,8 @@ public class PIDAutoTuner extends ExoMode {
                         .setUsingAcceleration(false)
                         .setUsingExponentialInput(false))
                 .construct(this);
+
+        g2 = new GamepadEx(gamepad2);
     }
 
     @Override
@@ -57,12 +61,13 @@ public class PIDAutoTuner extends ExoMode {
 
     @Override
     protected void Loop() {
-        auto.driveTo(new Pose(x, y, Math.toRadians(head)));
+        if (g2.wasJustPressed(GamepadKeys.Button.B))
+            auto.driveTo(new Pose(x, y, Math.toRadians(head)));
 
+        ahhX = ahX;
+        ahhY = ahY;
 
-
-        auto.setLinearPID(linP, 0, linD);
-        auto.setAngularPID(angP, 0, angD);
-        auto.setUltraLinearPID(ultraP, 0, ultraD);
+        g2.readButtons();
+        auto.linearC.setD(linD);
     }
 }

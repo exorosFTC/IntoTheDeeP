@@ -30,17 +30,17 @@ public class Outtake implements Enums.OuttakeEnums {
 
 
     public static final double
-            armTransfer = 0.07,
-            armPreTransfer = 0.03,
+            armTransfer = 0.033,
+            armPreTransfer = 0.01,
             armScoreSpecimens = 0.36,
             armScoreSamples = 0.63,
             armCollectSpecimens = 1;
 
     public static final double
-            wristTransfer = 0.52,
-            wristScoreSpecimens = 0.39,
-            wristScoreSamples = 0.36,
-            wristCollectSpecimens = 0.25;
+            wristTransfer = 0,
+            wristScoreSpecimens = 0.17,
+            wristScoreSamples = 0.17,
+            wristCollectSpecimens = 0.3;
 
     public static final double
             clawOpen = 0.15,
@@ -68,7 +68,7 @@ public class Outtake implements Enums.OuttakeEnums {
         }
 
         extension.addLimit(outtakeMAX)
-                .addCurrentAlert(9)
+                .addCurrentAlert(6.5)
                 .setControllerPID(p, 0, d, f)
                 .setAlpha(alpha)
                 .reverse(RightOuttakeMotor);
@@ -107,14 +107,18 @@ public class Outtake implements Enums.OuttakeEnums {
             } break;
 
             case COLLECT_SPECIMENS: {
-                hardware.servos.get(OuttakeLeftPivot).setPosition(armCollectSpecimens);
-                hardware.servos.get(OuttakeRightPivot).setPosition(armCollectSpecimens);
+                moveArm(0.6);
 
-                try { Thread.sleep(200); } catch (InterruptedException e) {}
+                try { Thread.sleep(70); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeWrist).setPosition(wristCollectSpecimens);
 
-                try { Thread.sleep(300); } catch (InterruptedException e) {}
+                try { Thread.sleep(370); } catch (InterruptedException e) {}
+
+                hardware.servos.get(OuttakeLeftPivot).setPosition(armCollectSpecimens);
+                hardware.servos.get(OuttakeRightPivot).setPosition(armCollectSpecimens);
+
+                try { Thread.sleep(50); } catch (InterruptedException e) {}
 
                 hardware.servos.get(OuttakeClaw).setPosition(clawOpen);
             } break;

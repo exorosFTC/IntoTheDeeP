@@ -1,10 +1,9 @@
-package org.firstinspires.ftc.teamcode.OpModes.Main.Autonomus;
+package org.firstinspires.ftc.teamcode.OpModes.Main.Autonomus.Left;
 
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.basketPose;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.extendoMAX;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.outtakeFullRetractTimeMs;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.successfulCatch;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.OuttakeWrist;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeWrist;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -17,18 +16,20 @@ import org.firstinspires.ftc.teamcode.Pathing.AutoDrive;
 import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 
 @Autonomous(group = "aa_main", preselectTeleOp = "✨ 🅻🍓🆅🅴 ✨")
-public class RedLeft extends ExoMode {
+public class SamplesRed extends ExoMode {
     private Machine robot;
     private AutoDrive auto;
 
     private final Pose
-            firstSample = new Pose(13, -10.3, Math.toRadians(15.2)),
-            secondSample = new Pose(14, -12.4, Math.toRadians(354)),
-            thirdSample = new Pose(12, -16.1, Math.toRadians(338.7));
+            firstSample = new Pose(18.2, 13, Math.toRadians(-12)),
+            secondSample = new Pose(18.2, 19, Math.toRadians(2)),
+            thirdSample = new Pose(16, 20, Math.toRadians(24));
+    ;
+
 
     private final double
-            leftUltraInch = 4,
-            rightUltraInch = 3.2;
+            leftUltraInch = 4.5,
+            rightUltraInch = 4.5;
 
     @Override
     protected void Init() {
@@ -53,18 +54,27 @@ public class RedLeft extends ExoMode {
 
     @Override
     protected void WhenStarted() {
-         auto = new AutoDrive(this, robot, new Pose());
+        auto = new AutoDrive(this, robot, new Pose());
 
-         preload();
-         firstSample();
-         secondSample();
-         thirdSample();
-         //fourthSample();
+        preload();
+        firstSample();
+        secondSample();
+        thirdSample();
+        //fourthSample();
 
 
-         auto.end();
+        auto.end();
     }
 
+    @Override
+    protected void InitializeThreads() {
+
+    }
+
+    @Override
+    protected void Loop() {
+
+    }
 
 
     private void preload() {
@@ -85,10 +95,15 @@ public class RedLeft extends ExoMode {
                 .driveTo(basketPose)
                 .waitDrive()
                 .validateBasket(leftUltraInch, rightUltraInch)
+                .driveTo(basketPose)
+                .waitDrive()
 
                 // after exiting alignment loop, wait for the outtake to extend, if necessary
                 .waitAction(() -> robot.system.outtake.extension.reached(29))
-                .moveSystem(() -> robot.system.score());
+                .moveSystem(() -> {
+                    robot.hardware.servos.get(IntakeWrist).setPosition(robot.system.intake.wristUp);
+                    robot.system.score();
+                });
     }
 
     private void firstSample() {
@@ -110,7 +125,7 @@ public class RedLeft extends ExoMode {
                             // spit in the case of a partial intake that did jam
                             robot.system.intake.setAction(Enums.IntakeEnums.IntakeAction.MOTOR_SPIT);
                             try { Thread.sleep(150); } catch (InterruptedException e) {}
-                            robot.system.autoTransferSequence();
+                            robot.system.transferSequence();
                         })
 
 
@@ -122,10 +137,14 @@ public class RedLeft extends ExoMode {
                 .driveTo(basketPose)
                 .waitDrive()
                 .validateBasket(leftUltraInch, rightUltraInch)
-
+                .driveTo(basketPose)
+                .waitDrive()
 
                 .waitAction(() -> robot.system.outtake.extension.reached(29))
-                .moveSystem(() -> robot.system.score());
+                .moveSystem(() -> {
+                    robot.hardware.servos.get(IntakeWrist).setPosition(robot.system.intake.wristUp);
+                    robot.system.score();
+                });
     }
 
     private void secondSample() {
@@ -143,7 +162,7 @@ public class RedLeft extends ExoMode {
                         () -> {
                             robot.system.intake.setAction(Enums.IntakeEnums.IntakeAction.MOTOR_SPIT);
                             try { Thread.sleep(150); } catch (InterruptedException e) {}
-                            robot.system.autoTransferSequence();
+                            robot.system.transferSequence();
                         })
 
                 // same outtake process
@@ -154,9 +173,14 @@ public class RedLeft extends ExoMode {
                 .driveTo(basketPose)
                 .waitDrive()
                 .validateBasket(leftUltraInch, rightUltraInch)
+                .driveTo(basketPose)
+                .waitDrive()
 
                 .waitAction(() -> robot.system.outtake.extension.reached(29))
-                .moveSystem(() -> robot.system.score());
+                .moveSystem(() -> {
+                    robot.hardware.servos.get(IntakeWrist).setPosition(robot.system.intake.wristUp);
+                    robot.system.score();
+                });
     }
 
     private void thirdSample() {
@@ -174,7 +198,7 @@ public class RedLeft extends ExoMode {
                         () -> {
                             robot.system.intake.setAction(Enums.IntakeEnums.IntakeAction.MOTOR_SPIT);
                             try { Thread.sleep(20); } catch (InterruptedException e) {}
-                            robot.system.autoTransferSequence();
+                            robot.system.transferSequence();
                         })
 
 
@@ -186,9 +210,14 @@ public class RedLeft extends ExoMode {
                 .driveTo(basketPose)
                 .waitDrive()
                 .validateBasket(leftUltraInch, rightUltraInch)
+                .driveTo(basketPose)
+                .waitDrive()
 
                 .waitAction(() -> robot.system.outtake.extension.reached(29))
-                .moveSystem(() -> robot.system.score());
+                .moveSystem(() -> {
+                    robot.hardware.servos.get(IntakeWrist).setPosition(robot.system.intake.wristUp);
+                    robot.system.score();
+                });
     }
 
     private void fourthSample() {
@@ -206,8 +235,8 @@ public class RedLeft extends ExoMode {
                 .waitActionTimeFailSafe(() -> successfulCatch,
                         () -> {
                             if (successfulCatch) {
-                            auto.driveTo(basketPose);
-                            robot.system.autoTransferSequence();
+                                auto.driveTo(basketPose);
+                                robot.system.transferSequence();
                             }
                         },
                         1200,
@@ -225,13 +254,9 @@ public class RedLeft extends ExoMode {
 
                 .waitDrive()
                 .validateBasket(leftUltraInch, rightUltraInch)
+                .driveTo(basketPose)
+                .waitDrive()
+
                 .moveSystem(() -> robot.system.score());
     }
-
-
-    @Override
-    protected void InitializeThreads() {}
-
-    @Override
-    protected void Loop() {}
 }

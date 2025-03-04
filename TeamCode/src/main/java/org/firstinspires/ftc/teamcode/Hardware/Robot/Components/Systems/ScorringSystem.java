@@ -6,6 +6,7 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemC
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.successfulCatch;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.telemetryAddLoopTime;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.updateOuttake;
+import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.usingAprilTagCamera;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.waitReachedOuttake;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.FrontUltrasonic;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.IntakeLocker;
@@ -19,6 +20,8 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.HardwareNames.Out
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants;
 import org.firstinspires.ftc.teamcode.Hardware.Generals.Interfaces.Enums;
@@ -84,19 +87,26 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
     public void outtakeToTransfer() {
         outtake.openClaw(true);
         outtake.setAction(OuttakeAction.PRE_TRANSFER);
+        outtake.moveArm(0.08);
 
-        hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
 
-        try { Thread.sleep(300); } catch (InterruptedException e) {}
+        if (opModeType == OpMode.TELE_OP)
+            hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
 
+        try { Thread.sleep(360); } catch (InterruptedException e) {}
+
+        hardware.servos.get(IntakeTurret).setPosition(0.77);
         outtake.extendUntilZero();
 
-        // disable outtake hardware to save current
+        try { Thread.sleep(100); } catch (InterruptedException e) {}
+
+        outtake.moveArm(0.01);
+        try { Thread.sleep(220); } catch (InterruptedException e) {}
         disableOuttake();
     }
 
     public void collectSpecimensIntakeAccess() {
-        hardware.servos.get(IntakeTurret).setPosition(0.55);
+        hardware.servos.get(IntakeTurret).setPosition(0.72);
 
         try { Thread.sleep(100); } catch (InterruptedException e) {}
 
@@ -109,10 +119,10 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
 
     public void throwSampleFromBack() {
         updateOuttake = true;
-        outtake.extension.setPosition(120);
+        outtake.extension.setPosition(200);
 
         timer.reset();
-        while (opMode.opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 400 && !outtake.extension.reached())
+        while (opMode.opModeIsActive() && timer.time(TimeUnit.MILLISECONDS) < 400 && !outtake.extension.reached(6))
         {
             outtake.extension.update();
             hardware.bulk.clearCache(Enums.Hubs.ALL);
@@ -129,20 +139,26 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
 
     // autonomus actions
     public void uptateAutoTransfer() {
+        if (hardware.motors.get(IntakeMotor).getCurrent(CurrentUnit.AMPS) > 8) {
+            intake.setAction(IntakeAction.MOTOR_SPIT);
+            try { Thread.sleep(200); } catch (InterruptedException e) {}
+            intake.setAction(IntakeAction.MOTOR_COLLECT);
+        }
+
         if (!intake.manual || !intake.isOut() || !intake.hasGameElement()) return;
 
         //close locker and check color
         hardware.servos.get(IntakeLocker).setPosition(intake.lockerClosed);
         intake.setAction(IntakeAction.MOTOR_STOP);
 
-        try { Thread.sleep(400); } catch (InterruptedException e) {}
+        try { Thread.sleep(70); } catch (InterruptedException e) {}
 
         if (!intake.checkIntakeCatch()) {
             //spit the wrong color
             hardware.servos.get(IntakeLocker).setPosition(intake.lockerOpen);
 
             intake.setAction(IntakeAction.MOTOR_SPIT);
-            try { Thread.sleep(400); } catch (InterruptedException e) {}
+            try { Thread.sleep(200); } catch (InterruptedException e) {}
             intake.setAction(IntakeAction.MOTOR_COLLECT);
 
             return;
@@ -152,7 +168,7 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
 
         if (opModeType == OpMode.TELE_OP)
             transferSequence();
-        else autoTransferSequence();
+        else transferSequence();
     }
 
     public void updateAutoTransferAuto() {
@@ -164,11 +180,23 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
 
         successfulCatch = true;
 
-        if (opModeType == OpMode.TELE_OP)
-            transferSequence();
-        else autoTransferSequence();
+        try { Thread.sleep(250); } catch (InterruptedException e) {}
 
-        return;
+        transferSequence();
+
+    }
+
+    public void waitCatch() {
+        if (!intake.manual || !intake.isOut() || !intake.hasGameElement()) return;
+
+        hardware.servos.get(IntakeLocker).setPosition(intake.lockerClosed);
+        intake.setAction(IntakeAction.MOTOR_STOP);
+
+        successfulCatch = true;
+
+        try { Thread.sleep(250); } catch (InterruptedException e) {}
+
+        hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
     }
 
     public void autoScoreSequence() {
@@ -196,22 +224,45 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
 
         // right game element -> starting the transfer sequence
         intake.setAction(IntakeAction.TRANSFER);
+
+        hardware.servos.get(OuttakeWrist).setPosition(outtake.wristTransfer);
         outtake.openClaw(true);
-        try { Thread.sleep(400); } catch (InterruptedException e) {}
 
-        // lower the wrist after the intake gets in transfer
+
+        try { Thread.sleep(350); } catch (InterruptedException e) {}
+
+        outtake.extension.setPosition(40);
+        hardware.motors.get(IntakeMotor).setPower(0);
+        hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
+
+        intake.extension.runWithoutEncoder();
+        outtake.extension.setPosition(40);
+        intake.extension.extend(-1);
+        timer.reset();
+
+        while (opMode.opModeIsActive()
+                &&
+                intake.extension.getPosition() > 10) {
+            hardware.bulk.clearCache(Hubs.ALL);
+            outtake.extension.update();
+        }
+
         hardware.servos.get(IntakeWrist).setPosition(intake.wristTransfer);
-        intake.extendUntilZero();
-        outtake.extendUntilZero();
-
-        // claw passthrough
-        hardware.servos.get(OuttakeLeftPivot).setPosition(outtake.armTransfer);
-        hardware.servos.get(OuttakeRightPivot).setPosition(outtake.armTransfer);
+        intake.extension.extend(0);
+        intake.extension.runToPosition();
+        intake.extension.disable();
 
         try { Thread.sleep(200); } catch (InterruptedException e) {}
 
+        hardware.servos.get(OuttakeLeftPivot).setPosition(outtake.armTransfer);
+        hardware.servos.get(OuttakeRightPivot).setPosition(outtake.armTransfer);
+
+        try { Thread.sleep(100); } catch (InterruptedException e) {}
+
         outtake.openClaw(false);
         hardware.servos.get(IntakeLocker).setPosition(intake.lockerOpen);
+
+        try { Thread.sleep(170); } catch (InterruptedException e) {}
 
         disableIntake();
     }
@@ -225,34 +276,21 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
         SystemConstants.updateOuttake = true;
 
 
+        hardware.servos.get(OuttakeWrist).setPosition(outtake.wristTransfer);
         outtake.openClaw(true);
         intake.isOut = false;
-
-        boolean moved = false;
-        double failSafeTime = extendoMAX * 2.5;
 
         hardware.motors.get(IntakeMotor).setPower(0);
         hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
 
+        outtake.extension.setPosition(40);
+        hardware.motors.get(IntakeMotor).setPower(0);
+        hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
+
         intake.extension.runWithoutEncoder();
+        outtake.extension.setPosition(40);
         intake.extension.extend(-1);
         timer.reset();
-
-        while (opMode.opModeIsActive()
-                &&
-                intake.extension.getPosition() > 600) {
-            hardware.bulk.clearCache(Hubs.ALL);
-        }
-
-        hardware.servos.get(IntakeTurret).setPosition(intake.turretTransfer);
-
-        while (opMode.opModeIsActive()
-                &&
-                intake.extension.getPosition() > 200) {
-            hardware.bulk.clearCache(Hubs.ALL);
-        }
-
-        hardware.servos.get(IntakeWrist).setPosition(intake.wristTransfer);
 
         while (opMode.opModeIsActive()
                 &&
@@ -260,14 +298,13 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
                 &&
                 !intake.extension.constrained()) {
             hardware.bulk.clearCache(Hubs.ALL);
+            outtake.extension.update();
         }
 
+        hardware.servos.get(IntakeWrist).setPosition(intake.wristTransfer);
         intake.extension.extend(0);
         intake.extension.runToPosition();
         intake.extension.disable();
-
-
-        outtake.extendUntilZero();
 
         // claw passthrough
         hardware.servos.get(OuttakeLeftPivot).setPosition(outtake.armTransfer);
@@ -278,8 +315,7 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
         outtake.openClaw(false);
         hardware.servos.get(IntakeLocker).setPosition(intake.lockerOpen);
 
-
-
+        try { Thread.sleep(170); } catch (InterruptedException e) {}
     }
 
 
@@ -333,22 +369,30 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
     }
 
     public void samplesHigh() {
+        hardware.motors.get(IntakeMotor).setPower(-0.8);
+        try { Thread.sleep(300); } catch (InterruptedException e) {}
+
         waitReachedOuttake = 200;
 
         outtake.waitReached(LiftAction.HIGH_BASKET);
         outtake.setAction(OuttakeAction.SCORE_SAMPLES);
 
         waitReachedOuttake = 6;
+
+
+        hardware.motors.get(IntakeMotor).setPower(0);
     }
 
     public void score() {
         switch (outtake.getAction()) {
             case SCORE_SAMPLES: {
-               hardware.servos.get(OuttakeWrist).setPosition(outtake.wristTransfer);
-               try { Thread.sleep(120); } catch (InterruptedException e) {}
-               outtake.openClaw(true);
+                outtake.moveArm(0.78);
+                hardware.servos.get(OuttakeWrist).setPosition(outtake.wristTransfer);
+                try { Thread.sleep(120); } catch (InterruptedException e) {}
+                outtake.openClaw(true);
 
-               try { Thread.sleep(200); } catch (InterruptedException e) {}
+                try { Thread.sleep(200); } catch (InterruptedException e) {}
+
 
                 outtakeToTransfer();
             } break;

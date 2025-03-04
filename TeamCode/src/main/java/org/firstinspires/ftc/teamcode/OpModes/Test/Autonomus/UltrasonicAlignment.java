@@ -1,10 +1,5 @@
 package org.firstinspires.ftc.teamcode.OpModes.Test.Autonomus;
 
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.UltraLinearD;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.UltraLinearP;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.extendoMAX;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.SystemConstants.successfulCatch;
-
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
@@ -21,10 +16,6 @@ import org.firstinspires.ftc.teamcode.Pathing.Math.Pose;
 public class UltrasonicAlignment extends ExoMode {
     private Machine robot;
     private AutoDrive auto;
-
-    public static double distance = 4;
-    public static double p = UltraLinearP;
-    public static double d = UltraLinearD;
 
     @Override
     protected void Init() {

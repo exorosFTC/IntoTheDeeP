@@ -19,7 +19,7 @@ public class SystemConstants {
 
     public static double manualLiftCoefficient = 1;
     public static final int outtakeMAX = 920;
-    public static final int extendoMAX = 830;
+    public static int extendoMAX = 830;
 
     public static final int intakeFullRetractTimeMs = 750;
     public static final int outtakeFullRetractTimeMs = 300;

@@ -4,8 +4,6 @@ import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.Mecanum
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.AngularP;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearD;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.LinearP;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.UltraLinearD;
-import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.UltraLinearP;
 import static org.firstinspires.ftc.teamcode.Hardware.Generals.Constants.MecanumConstants.basketPose;
 import static org.firstinspires.ftc.teamcode.Pathing.Math.MathFormulas.FindShortestPath;
 
@@ -41,9 +39,8 @@ public class AutoDrive {
     private final Hardware hardware;
     private final Localizer localizer;
 
-    private final PIDController linearC, angularC;
-    private final PIDController ultraLinearC;
-    private double busyThreshold = 0.14;
+    public final PIDController linearC, angularC;
+    private double busyThreshold = 0.19;
 
     private double failSafeTimeMs = Double.POSITIVE_INFINITY;
     private final ElapsedTime failSafeTimer = new ElapsedTime();
@@ -82,8 +79,6 @@ public class AutoDrive {
 
 
 
-
-
     public AutoDrive(LinearOpMode opMode, Machine robot, Pose startPose) {
         this.drive = robot.drive;
         this.system = robot.system;
@@ -91,8 +86,6 @@ public class AutoDrive {
 
         linearC = new PIDController(LinearP, 0, LinearD);
         angularC = new PIDController(AngularP, 0, AngularD);
-
-        ultraLinearC = new PIDController(UltraLinearP, 0, UltraLinearD);
 
         localizer = new TwoWheelNew(opMode);
         setPose(position);
@@ -111,8 +104,6 @@ public class AutoDrive {
         linearC = new PIDController(LinearP, 0, LinearD);
         angularC = new PIDController(AngularP, 0, AngularD);
 
-        ultraLinearC = new PIDController(UltraLinearP, 0, UltraLinearD);
-
         localizer = new TwoWheelNew(opMode);
         setPose(position);
 
@@ -127,7 +118,6 @@ public class AutoDrive {
 
     private void startDriveThread() {
         driveThread = new Thread(() -> {
-            try {
                 while (opMode.opModeIsActive()) {
                     localizer.update();
                     position = localizer.getRobotPosition();
@@ -138,6 +128,7 @@ public class AutoDrive {
                     hardware.telemetry.addData("head: ", position.heading);
                     hardware.telemetry.addData("left: ", drive.left.getFilteredDistance(DistanceUnit.INCH));
                     hardware.telemetry.addData("right: ", drive.right.getFilteredDistance(DistanceUnit.INCH));
+                    hardware.telemetry.addData("front: ", drive.front.getFilteredDistance(DistanceUnit.INCH));
 
                     hardware.telemetry.update();
                     hardware.bulk.clearCache(Enums.Hubs.ALL);
@@ -157,7 +148,6 @@ public class AutoDrive {
 
                     drive.update(driveVector);
                 }
-            } catch (RuntimeException e) {};
         });
 
         driveThread.start();
@@ -183,14 +173,14 @@ public class AutoDrive {
     public AutoDrive driveTo(Pose pose) {
         this.failSafeTimeMs = Double.POSITIVE_INFINITY;
         this.usingFailSafe = false;
-        this.target = pose;
+        this.target = new Pose(pose.x, pose.y, normalizeAngleRad(pose.heading));
         return this;
     }
 
     public AutoDrive driveTo(Pose pose, double ms) {
         this.failSafeTimeMs = ms;
         this.usingFailSafe = true;
-        this.target = pose;
+        this.target = new Pose(pose.x, pose.y, normalizeAngleRad(pose.heading));
 
         failSafeTimer.reset();
 
@@ -203,21 +193,80 @@ public class AutoDrive {
                 correctionY = drive.left.getFilteredDistance(DistanceUnit.INCH) - leftDistance;
 
         // correct location based on the ultrasonic input
-        setPose(new Pose(basketPose.x + correctionX, basketPose.y + correctionY, Math.toRadians(position.heading)));
+        setPose(new Pose(basketPose.x + correctionX, basketPose.y - correctionY, Math.toRadians(position.heading)));
 
         return this;
     }
 
+    public AutoDrive alignBasket(double leftDistance, double rightDistance) {
+        driveTo(new Pose(position.x, position.y, Math.toRadians(-45)));
+
+        waitDrive();
+        boolean reached = false;
+
+        pause();
+        failSafeTimer.reset();
+        while (!reached && opMode.opModeIsActive() && failSafeTimer.time(TimeUnit.MILLISECONDS) < 1400) {
+            double left = drive.left.getFilteredDistance(DistanceUnit.INCH),
+                    right = drive.right.getFilteredDistance(DistanceUnit.INCH);
+
+            Pose power = new Pose(
+                 linearC.calculate(right, rightDistance) * 1.9,
+                 -linearC.calculate(left, leftDistance) * 1.9,
+                    angularC.calculate(FindShortestPath(normalizeAngleRad(Math.toRadians(position.heading)), Math.toRadians(-45))
+            ));
+
+            reached = Math.abs(right - rightDistance) < 1 && Math.abs(left - leftDistance) < 1;
+            drive.update(power);
+        }
+
+        driveTo(new Pose(position.x, position.y, Math.toRadians(position.heading)));
+        resume();
+        return this;
+    }
+
+
+
+
     public AutoDrive driveTillScoreSpecimen() {
         pause();
 
+        system.intake.extension.runWithoutEncoder();
+        system.intake.extension.extend(-1);
+
         waitTimer.reset();
-        while (opMode.opModeIsActive() && drive.front.getFilteredDistance(DistanceUnit.MM) > 20 && waitTimer.time(TimeUnit.MILLISECONDS) < 1200) {
-            drive.update(new Pose(0.4, 0, 0));
+        while (opMode.opModeIsActive() && drive.front.getFilteredDistance(DistanceUnit.INCH) > 0.9 && waitTimer.time(TimeUnit.MILLISECONDS) < 700) {
+            drive.update(new Pose(0.7, 0, 0));
+
+            if (system.intake.extension.getPosition() < 2) {
+                system.intake.extension.extend(0);
+                system.intake.extension.resetEncoders();
+                system.intake.extension.runToPosition();
+            }
         }
+
+        system.intake.extension.resetEncoders();
+        system.intake.extension.runToPosition();
 
         drive.update(new Pose());
         system.score();
+        driveTo(new Pose(position.x, position.y, Math.toRadians(position.heading)));
+        resume();
+
+        return this;
+    }
+
+
+    public AutoDrive slowlyDriveToSpecsDistance(double distance) {
+        double start = position.x;
+
+        pause();
+        failSafeTimer.reset();
+        while (opMode.opModeIsActive() && start - position.x < distance && failSafeTimer.time(TimeUnit.MILLISECONDS) < 400) {
+            drive.update(new Pose(-0.2, 0, 0));
+        }
+
+        drive.update(new Pose());
         driveTo(new Pose(position.x, position.y, Math.toRadians(position.heading)));
         resume();
 
@@ -331,11 +380,28 @@ public class AutoDrive {
 
 
     private void updateDriveVector() {
-        double radians = Math.toRadians(position.heading);
+        double radians = normalizeAngleRad(Math.toRadians(position.heading));
+        double targetVelX, targetVelY;
 
-        double targetVelX = linearC.calculate(position.x, target.x);
-        double targetVelY = linearC.calculate(position.y, target.y);
-        double targetVelHeading = angularC.calculate(-FindShortestPath(radians, target.heading));
+
+        if (Math.abs(target.x - position.x) > 4.6) {
+            linearC.setP(LinearP);
+            targetVelX = linearC.calculate(position.x, target.x);
+        } else {
+            linearC.setP(0.04);
+            targetVelX = linearC.calculate(position.x, target.x);
+        }
+
+
+        if (Math.abs(target.y - position.y) > 4) {
+            linearC.setP(LinearP);
+            targetVelY = linearC.calculate(position.y, target.y);
+        } else {
+            linearC.setP(0.04);
+            targetVelY = linearC.calculate(position.y, target.y);
+        }
+
+        double targetVelHeading = angularC.calculate(FindShortestPath(radians, target.heading));
 
         double velocityMagnitude = Math.sqrt(targetVelX * targetVelX + targetVelY * targetVelY);
         double turnRadius = velocityMagnitude / (Math.abs(targetVelHeading) + 1e-6);
@@ -344,7 +410,7 @@ public class AutoDrive {
         double driftCompensationX = -centripetalAcc * Math.sin(radians);
         double driftCompensationY = centripetalAcc * Math.cos(radians);
 
-        targetVelX += driftCompensationX;
+        targetVelX += driftCompensationX - 0.1;
         targetVelY += driftCompensationY;
 
         // convert the adjusted vector to the field-centric coordinate system.
@@ -354,7 +420,7 @@ public class AutoDrive {
         // build the final drive vector using the rotated linear outputs and the angular command.
         driveVector = new Pose(
                 rotatedDiff.x,
-                -rotatedDiff.y,
+                rotatedDiff.y,
                 targetVelHeading).multiplyBy(13.0 / hardware.batteryVoltageSensor.getVoltage());
     }
 
@@ -364,10 +430,20 @@ public class AutoDrive {
 
     public void setLinearPID(double p, double i, double d) { linearC.setPID(p, i, d); }
 
-    public void setUltraLinearPID(double p, double i, double d) { ultraLinearC.setPID(p, i, d); }
-
     public void setAngularPID(double p, double i, double d) { angularC.setPID(p, i, d); }
 
+
+
+
+    private double normalizeAngleRad(double angle) {
+        if (angle < 0) return angle + 2 * Math.PI;
+        return angle;
+    }
+
+    private double normalizeAngleDeg(double angle) {
+        if (angle < 0) return angle + 360;
+        return angle;
+    }
 
 
     public Pose getPosition() { return position; }

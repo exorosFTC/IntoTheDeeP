@@ -41,18 +41,17 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
 
     public static final double
-            turretTransfer = 0.74,
-            turretCollect = 0.17;
+            turretTransfer = 0.93,
+            turretCollect = 0.37;
 
     public static final double
-            wristTransfer = 0.28,
-            wristUp = 0.23
-            ,
-            wristCollect = 0.47;
+            wristTransfer = 0.30,
+            wristUp = 0.23,
+            wristCollect = 0.465;
 
     public static final double
             lockerOpen = 1,
-            lockerClosed = 0.39;
+            lockerClosed = 0.45;
 
 
 
@@ -69,7 +68,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
         extension = new OneMotorLift(opMode, IntakeExtensionMotor);
         extension.addLimit(extendoMAX)
-                .addCurrentAlert(8.5)
+                .addCurrentAlert(8)
 
                 .reverse();
 
@@ -118,7 +117,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
             case MOTOR_COLLECT: { hardware.motors.get(IntakeMotor).setPower(1); } break;
 
-            case MOTOR_SPIT: { hardware.motors.get(IntakeMotor).setPower(-0.8); } break;
+            case MOTOR_SPIT: { hardware.motors.get(IntakeMotor).setPower(-0.6); } break;
 
             case MOTOR_STOP: { hardware.motors.get(IntakeMotor).setMotorDisable(); } break;
         }
@@ -162,7 +161,7 @@ public class Intake implements Enums, Enums.IntakeEnums {
         }
 
         extension.extend(0);
-        extension.resetEncoders();
+        extension.setPosition(0);
         extension.runToPosition();
         extension.disable();
     }
@@ -223,11 +222,11 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
     // only red thresholding for faster computing
     private Enums.Color checkColor(double r) {
-        if (Math.abs(blue.getR() - r) < 1500)
+        if (r < 1300)
             return Color.BLUE;
-        if (Math.abs(red.getR() - r) < 1500)
+        if (r < 4300 && r > 1500)
             return Color.RED;
-        if (Math.abs(yellow.getR() - r) < 1500)
+        if (r > 6500)
             return Color.YELLOW;
         return Color.NONE;
     }
