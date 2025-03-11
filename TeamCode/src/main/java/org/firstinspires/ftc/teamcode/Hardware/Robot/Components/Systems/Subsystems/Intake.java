@@ -41,17 +41,17 @@ public class Intake implements Enums, Enums.IntakeEnums {
 
 
     public static final double
-            turretTransfer = 0.93,
+            turretTransfer = 0.92,
             turretCollect = 0.37;
 
     public static final double
-            wristTransfer = 0.30,
-            wristUp = 0.23,
-            wristCollect = 0.465;
+            wristTransfer = 1,
+            wristUp = 1,
+            wristCollect = 0.66;
 
     public static final double
             lockerOpen = 1,
-            lockerClosed = 0.45;
+            lockerClosed = 0.33;
 
 
 

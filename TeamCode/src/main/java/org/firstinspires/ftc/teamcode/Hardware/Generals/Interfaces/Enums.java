@@ -82,7 +82,7 @@ public interface Enums {
             MID_SMT(100),
             FULL(outtakeMAX),
 
-            HIGH_BASKET(850),
+            HIGH_BASKET(750),
             HIGH_RUNG(80),
             LOW_BASKET(300), // for when we're too op
             LOW_RUNG(0); // we don't do that here

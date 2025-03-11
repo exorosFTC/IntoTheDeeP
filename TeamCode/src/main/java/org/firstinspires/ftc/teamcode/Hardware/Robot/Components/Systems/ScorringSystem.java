@@ -235,23 +235,23 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
         hardware.motors.get(IntakeMotor).setPower(0);
         hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
 
-        intake.extension.runWithoutEncoder();
+        intake.extension.setPosition(0);
         outtake.extension.setPosition(40);
         intake.extension.extend(-1);
         timer.reset();
 
         while (opMode.opModeIsActive()
                 &&
-                intake.extension.getPosition() > 10) {
+                intake.extension.getPosition() > 2
+                &&
+                !intake.extension.constrained()) {
             hardware.bulk.clearCache(Hubs.ALL);
             outtake.extension.update();
         }
 
         hardware.servos.get(IntakeWrist).setPosition(intake.wristTransfer);
-        intake.extension.extend(0);
         intake.extension.runToPosition();
-        intake.extension.disable();
-
+        intake.extension.extend(0);
         try { Thread.sleep(200); } catch (InterruptedException e) {}
 
         hardware.servos.get(OuttakeLeftPivot).setPosition(outtake.armTransfer);
@@ -287,7 +287,7 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
         hardware.motors.get(IntakeMotor).setPower(0);
         hardware.servos.get(IntakeWrist).setPosition(intake.wristUp);
 
-        intake.extension.runWithoutEncoder();
+        intake.extension.setPosition(0);
         outtake.extension.setPosition(40);
         intake.extension.extend(-1);
         timer.reset();
@@ -302,9 +302,8 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
         }
 
         hardware.servos.get(IntakeWrist).setPosition(intake.wristTransfer);
-        intake.extension.extend(0);
         intake.extension.runToPosition();
-        intake.extension.disable();
+        intake.extension.extend(0);
 
         // claw passthrough
         hardware.servos.get(OuttakeLeftPivot).setPosition(outtake.armTransfer);
@@ -348,7 +347,6 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
 
     private void disableIntake() {
         hardware.servos.get(IntakeLocker).getController().pwmDisable();
-        intake.extension.disable();
 
         intake.manual = false;
         outtake.manual = true;
@@ -386,7 +384,7 @@ public class ScorringSystem implements Enums, Enums.IntakeEnums, Enums.OuttakeEn
     public void score() {
         switch (outtake.getAction()) {
             case SCORE_SAMPLES: {
-                outtake.moveArm(0.78);
+                outtake.moveArm(0.65);
                 hardware.servos.get(OuttakeWrist).setPosition(outtake.wristTransfer);
                 try { Thread.sleep(120); } catch (InterruptedException e) {}
                 outtake.openClaw(true);

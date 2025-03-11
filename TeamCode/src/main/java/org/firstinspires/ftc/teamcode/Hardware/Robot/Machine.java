@@ -122,18 +122,21 @@ public class Machine {
                         system.intake.extension.runToPosition();
                     }
 
-                    if (g1.wasJustPressed(GamepadKeys.Button.LEFT_BUMPER)) {
-                        SystemConstants.updateOuttake = true;
-
-                        system.outtake.extension.autoReset();
-                        system.intake.extension.autoReset();
-
-                        SystemConstants.updateOuttake = false;
-                    }
-
                     g1.readButtons();
                 }
             });
+
+        else drivetrainThread = new Thread(() -> {
+            while (opMode.opModeIsActive()) {
+                drive.update(new Pose(
+                        g2.getLeftY(),                         // forwards
+                        -g2.getLeftX(),                        // sideways
+                        -g2.getRightX() * driveSensitivity      // turning
+                ));
+
+                //g2.readButtons();
+            }
+        });
     }
 
 

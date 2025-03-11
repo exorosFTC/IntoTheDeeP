@@ -30,7 +30,7 @@ public class Outtake implements Enums.OuttakeEnums {
 
 
     public static final double
-            armTransfer = 0.033,
+            armTransfer = 0.039,
             armPreTransfer = 0.01,
             armScoreSpecimens = 0.36,
             armScoreSamples = 0.63,
